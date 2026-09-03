@@ -74,7 +74,7 @@ require_once __DIR__ . '/partials/header.php';
         <span class="badge-verified">✓ 100% Official Verified Body</span>
       </div>
       <a href="<?= htmlspecialchars($comm['website']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
-        🌐 Official Commission Website &rarr;
+        Official Commission Website &rarr;
       </a>
     </div>
 
@@ -173,8 +173,8 @@ require_once __DIR__ . '/partials/header.php';
 
               <div class="job-dates-row">
                 <div class="job-dates-header">
-                  <span class="job-dates-label">📅 Application Window</span>
-                  <span class="badge-active">🟢 Active</span>
+                  <span class="job-dates-label">Application Window</span>
+                  <span class="badge-active">Active</span>
                 </div>
                 <div class="job-dates-val">
                   <span><?= $startDateStr ?></span>
@@ -187,20 +187,20 @@ require_once __DIR__ . '/partials/header.php';
             <!-- Structured 2-Tier Actions: Full Details CTA + Secondary Quick Actions -->
             <div class="job-card-actions">
               <a href="/jobs/<?= htmlspecialchars($job['slug']) ?>" class="btn btn-primary btn-card-main">
-                📄 Full Details &amp; Syllabus &rarr;
+                Full Details &amp; Syllabus &rarr;
               </a>
 
               <?php if (!empty($job['official_apply_url']) || !empty($job['primary_notification_url'])): ?>
                 <div class="job-card-secondary-actions">
                   <?php if (!empty($job['official_apply_url'])): ?>
                     <a href="<?= htmlspecialchars($job['official_apply_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-card-sub">
-                      🚀 Apply Online
+                      Apply Online
                     </a>
                   <?php endif; ?>
 
                   <?php if (!empty($job['primary_notification_url'])): ?>
                     <a href="<?= htmlspecialchars($job['primary_notification_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-glass btn-card-sub" title="Download Official PDF Notice">
-                      📥 Official PDF
+                      Official PDF
                     </a>
                   <?php endif; ?>
                 </div>
@@ -241,7 +241,7 @@ require_once __DIR__ . '/partials/header.php';
             </div>
             <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
               <a href="/exams/<?= htmlspecialchars($ex['slug']) ?>" class="btn btn-primary btn-sm" style="width: 100%; text-align: center;">
-                🧠 View Pattern, Syllabus & Cutoffs &rarr;
+                View Pattern, Syllabus & Cutoffs &rarr;
               </a>
             </div>
           </div>

@@ -17,7 +17,7 @@ $recs = $db->query("SELECT id, title, organization_name FROM recruitments WHERE 
 $pageTitle = "Manage Preparation Guides — Admin Control Center";
 $adminPageTitle = "Preparation Guides";
 $adminPageHeading = "Editorial Intelligence & Preparation Guides";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addArticleModal\')" class="admin-btn admin-btn-primary admin-btn-sm">➕ Create Guide Article</button>';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addArticleModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Create Guide Article</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -26,11 +26,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">📚 Published Editorial Guides</h3>
+      <h3 class="admin-card-title">Published Editorial Guides</h3>
       <p class="admin-card-desc">Showing <strong><?= count($articles) ?></strong> notification guides, syllabus breakdowns, and cutoff analysis reports</p>
     </div>
     <button onclick="openModal('addArticleModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      ➕ Create Guide Article
+      + Create Guide Article
     </button>
   </div>
 
@@ -51,7 +51,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
         <?php if (empty($articles)): ?>
           <tr>
             <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;"></div>
               <strong>No preparation guides published yet.</strong>
               <p style="font-size: 0.8rem; margin-top: 0.35rem;">Click "Create Guide Article" above to publish your first editorial guide.</p>
             </td>
@@ -94,13 +94,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <a href="/articles/<?= htmlspecialchars($art['slug']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-icon-only" title="View Published Guide">
-                  👁️
+                  
                 </a>
                 <button onclick="editArticle(<?= $art['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Guide Article">
-                  ✏️
+                  
                 </button>
                 <button onclick="deleteArticle(<?= $art['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Guide Article">
-                  🗑️
+                  
                 </button>
               </div>
             </td>
@@ -115,7 +115,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addArticleModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">➕ Publish New Preparation Guide</h3>
+      <h3 class="admin-modal-title">+ Publish New Preparation Guide</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addArticleModal')">&times;</button>
     </div>
 
@@ -186,7 +186,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editArticleModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">✏️ Edit Preparation Guide</h3>
+      <h3 class="admin-modal-title"> Edit Preparation Guide</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editArticleModal')">&times;</button>
     </div>
 

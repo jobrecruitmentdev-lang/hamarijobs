@@ -29,7 +29,7 @@ $examsList = $db->query("SELECT id, name, short_name, conducting_body FROM exams
 $pageTitle = "Manage Results & Cutoffs — Admin Control Center";
 $adminPageTitle = "Results & Cutoffs";
 $adminPageHeading = "Recruitment Results, Selection Merit Lists & Official Cutoffs Intelligence";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addResultModal\')" class="admin-btn admin-btn-primary admin-btn-sm" style="margin-right: 0.5rem;">➕ Create Result Notice</button><button onclick="openModal(\'addCutoffModal\')" class="admin-btn admin-btn-glass admin-btn-sm">📊 Add Cutoff Score</button>';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addResultModal\')" class="admin-btn admin-btn-primary admin-btn-sm" style="margin-right: 0.5rem;">+ Create Result Notice</button><button onclick="openModal(\'addCutoffModal\')" class="admin-btn admin-btn-glass admin-btn-sm">Add Cutoff Score</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -39,7 +39,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Declared Results</span>
-      <div class="admin-kpi-icon ruby">🏆</div>
+      <div class="admin-kpi-icon ruby"></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--primary-ruby);"><?= number_format(count(array_filter($results, fn($r) => $r['event_type'] === 'RESULT_DECLARED'))) ?></div>
     <div class="admin-kpi-subtext">
@@ -61,7 +61,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Official Cutoff Records</span>
-      <div class="admin-kpi-icon blue">📊</div>
+      <div class="admin-kpi-icon blue"></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-blue);"><?= number_format(count($cutoffs)) ?></div>
     <div class="admin-kpi-subtext">
@@ -74,11 +74,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card" style="margin-bottom: 2rem;">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">🏆 Published Exam Results & Scorecard Notices</h3>
+      <h3 class="admin-card-title">Published Exam Results & Scorecard Notices</h3>
       <p class="admin-card-desc">Showing <strong><?= count($results) ?></strong> official merit lists and selection notices</p>
     </div>
     <button onclick="openModal('addResultModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      ➕ Create Result Notice
+      + Create Result Notice
     </button>
   </div>
 
@@ -99,7 +99,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
         <?php if (empty($results)): ?>
           <tr id="emptyResultRow">
             <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏆</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;"></div>
               <strong>No results declared yet.</strong>
               <p style="font-size: 0.8rem; margin-top: 0.35rem;">Click "Create Result Notice" above to announce an official examination result.</p>
             </td>
@@ -140,7 +140,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
                     $label = '📜 Final Merit List';
                 } elseif ($res['event_type'] === 'CUTOFF_RELEASED') {
                     $badgeClass = 'badge-org';
-                    $label = '📊 Cutoff Score';
+                    $label = 'Cutoff Score';
                 } elseif ($res['event_type'] === 'ANSWER_KEY_RELEASED') {
                     $badgeClass = 'badge-urgent';
                     $label = '🔑 Answer Key';
@@ -167,10 +167,10 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <button onclick="editResult(<?= $res['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Result Notice">
-                  ✏️
+                  
                 </button>
                 <button onclick="deleteResult(<?= $res['id'] ?>, '<?= htmlspecialchars(addslashes($res['event_title'])) ?>')" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Result">
-                  🗑️
+                  
                 </button>
               </div>
             </td>
@@ -185,11 +185,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">📊 Category-wise Cutoff Records</h3>
+      <h3 class="admin-card-title">Category-wise Cutoff Records</h3>
       <p class="admin-card-desc">Showing <strong><?= count($cutoffs) ?></strong> recorded historical & latest qualifying cutoff benchmark marks</p>
     </div>
     <button onclick="openModal('addCutoffModal')" class="admin-btn admin-btn-glass admin-btn-sm">
-      ➕ Add Cutoff Score
+      + Add Cutoff Score
     </button>
   </div>
 
@@ -212,7 +212,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
         <?php if (empty($cutoffs)): ?>
           <tr>
             <td colspan="9" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;"></div>
               <strong>No cutoff benchmarks added yet.</strong>
             </td>
           </tr>
@@ -246,7 +246,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             </td>
             <td style="text-align: right;">
               <button onclick="deleteCutoff(<?= $c['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Cutoff">
-                🗑️
+                
               </button>
             </td>
           </tr>
@@ -260,7 +260,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addResultModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">➕ Publish Official Result / Merit List</h3>
+      <h3 class="admin-modal-title">+ Publish Official Result / Merit List</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addResultModal')">&times;</button>
     </div>
 
@@ -277,9 +277,9 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <div class="admin-form-group">
             <label class="admin-form-label">Result Event Type *</label>
             <select name="event_type" required class="admin-form-control">
-              <option value="RESULT_DECLARED">🏆 RESULT_DECLARED</option>
+              <option value="RESULT_DECLARED">RESULT_DECLARED</option>
               <option value="FINAL_MERIT_LIST">📜 FINAL_MERIT_LIST</option>
-              <option value="CUTOFF_RELEASED">📊 CUTOFF_RELEASED</option>
+              <option value="CUTOFF_RELEASED">CUTOFF_RELEASED</option>
               <option value="ANSWER_KEY_RELEASED">🔑 ANSWER_KEY_RELEASED</option>
             </select>
           </div>
@@ -337,7 +337,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editResultModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">✏️ Edit Result / Merit List Notice</h3>
+      <h3 class="admin-modal-title"> Edit Result / Merit List Notice</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editResultModal')">&times;</button>
     </div>
 
@@ -356,9 +356,9 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <div class="admin-form-group">
             <label class="admin-form-label">Notice Type *</label>
             <select name="event_type" id="edit_result_type" required class="admin-form-control">
-              <option value="RESULT_DECLARED">🏆 RESULT_DECLARED</option>
+              <option value="RESULT_DECLARED">RESULT_DECLARED</option>
               <option value="FINAL_MERIT_LIST">📜 FINAL_MERIT_LIST</option>
-              <option value="CUTOFF_RELEASED">📊 CUTOFF_RELEASED</option>
+              <option value="CUTOFF_RELEASED">CUTOFF_RELEASED</option>
               <option value="ANSWER_KEY_RELEASED">🔑 ANSWER_KEY_RELEASED</option>
             </select>
           </div>
@@ -416,7 +416,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addCutoffModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">📊 Add Official Cutoff Benchmark Score</h3>
+      <h3 class="admin-modal-title">Add Official Cutoff Benchmark Score</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addCutoffModal')">&times;</button>
     </div>
 

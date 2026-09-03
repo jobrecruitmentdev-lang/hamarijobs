@@ -83,11 +83,11 @@ require_once __DIR__ . '/partials/header.php';
 
     <!-- Tab Navigation Buttons -->
     <div class="tabs-nav">
-      <button class="tab-btn active" data-target="tab-overview">🎓 Overview & Eligibility</button>
-      <button class="tab-btn" data-target="tab-pattern">📊 Exam Pattern & Marking</button>
-      <button class="tab-btn" data-target="tab-syllabus">📚 Syllabus & Weightages</button>
-      <button class="tab-btn" data-target="tab-cutoffs">📈 Previous Year Cutoffs</button>
-      <button class="tab-btn" data-target="tab-strategy">💡 Preparation Strategy</button>
+      <button class="tab-btn active" data-target="tab-overview">Overview & Eligibility</button>
+      <button class="tab-btn" data-target="tab-pattern">Exam Pattern & Marking</button>
+      <button class="tab-btn" data-target="tab-syllabus">Syllabus & Weightages</button>
+      <button class="tab-btn" data-target="tab-cutoffs">Previous Year Cutoffs</button>
+      <button class="tab-btn" data-target="tab-strategy">Preparation Strategy</button>
     </div>
   </div>
 
@@ -96,7 +96,7 @@ require_once __DIR__ . '/partials/header.php';
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
       <div class="content-box">
         <h3 class="content-box-title" style="color: var(--primary-red);">
-          🎓 Educational Eligibility
+          Educational Eligibility
         </h3>
         <p style="color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem;">
           <?= htmlspecialchars($exam['eligibility_summary'] ?: 'Bachelor\'s Degree in relevant discipline from a recognized University.') ?>
@@ -114,7 +114,7 @@ require_once __DIR__ . '/partials/header.php';
 
       <div class="content-box" style="grid-column: 1 / -1;">
         <h3 class="content-box-title" style="color: var(--blue);">
-          🏆 Selection Stages & Phases
+          Selection Stages & Phases
         </h3>
         <p style="color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem;">
           <?= htmlspecialchars($exam['selection_stages_summary'] ?: 'Preliminary Examination (Tier-1 CBT) -> Main Examination (Tier-2 CBT) -> Skill / Typing Test -> Document Verification.') ?>
@@ -127,7 +127,7 @@ require_once __DIR__ . '/partials/header.php';
   <div id="tab-pattern" class="tab-pane">
     <div class="content-box" style="margin-bottom: 2.5rem;">
       <h3 class="content-box-title">
-        📊 Official Examination Scheme & Test Structure
+        Official Examination Scheme & Test Structure
       </h3>
       
       <table class="data-table">
@@ -190,7 +190,7 @@ require_once __DIR__ . '/partials/header.php';
   <div id="tab-syllabus" class="tab-pane">
     <div class="content-box" style="margin-bottom: 2.5rem;">
       <h3 class="content-box-title">
-        📚 Section-Wise Syllabus Breakdown & Topic Weightage
+        Section-Wise Syllabus Breakdown & Topic Weightage
       </h3>
 
       <table class="data-table">
@@ -247,7 +247,7 @@ require_once __DIR__ . '/partials/header.php';
   <div id="tab-cutoffs" class="tab-pane">
     <div class="content-box" style="margin-bottom: 2.5rem;">
       <h3 class="content-box-title">
-        📈 Previous Year Cutoff Benchmarks & Trends
+        Previous Year Cutoff Benchmarks & Trends
       </h3>
 
       <table class="data-table">
@@ -287,7 +287,7 @@ require_once __DIR__ . '/partials/header.php';
   <div id="tab-strategy" class="tab-pane">
     <div class="content-box" style="margin-bottom: 2.5rem;">
       <h3 class="content-box-title">
-        💡 Recommended Preparation Roadmap & High-Yield Strategy
+        Recommended Preparation Roadmap & High-Yield Strategy
       </h3>
       <div style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8;">
         <?= nl2br(htmlspecialchars($exam['preparation_strategy'] ?: "1. Build strong conceptual foundation from NCERT and standard reference manuals.\n2. Dedicate 2 hours daily to speed calculation and arithmetic shortcut practice.\n3. Solve previous 5 years question papers to master negative marking avoidance.\n4. Take full-length timed mock tests weekly and review wrong questions.")) ?>

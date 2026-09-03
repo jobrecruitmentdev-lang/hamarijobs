@@ -74,7 +74,7 @@ require_once __DIR__ . '/partials/header.php';
   <!-- Articles Grid -->
   <?php if (empty($articles)): ?>
     <div class="content-box" style="text-align: center; padding: 4rem 1.5rem;">
-      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;"></div>
       <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: var(--text-primary);">No matching preparation guides found</h3>
       <p style="color: var(--text-secondary); margin-top: 0.25rem;">Try choosing "All Guide Types" or searching with broader keywords.</p>
       <a href="/articles" class="btn btn-primary" style="margin-top: 1.5rem;">Reset Filter</a>

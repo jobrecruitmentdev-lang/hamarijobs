@@ -37,7 +37,7 @@ $jobs = $stmt->fetchAll();
 $pageTitle = "Manage Recruitment Notices — Admin Control Center";
 $adminPageTitle = "Manage Jobs";
 $adminPageHeading = "Recruitment Gazettes & Public Notices Directory";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addJobModal\')" class="admin-btn admin-btn-primary admin-btn-sm">➕ Add New Job Notice</button>';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addJobModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Add New Job Notice</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -47,7 +47,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <form method="GET" action="/admin/recruitments" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
     <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; flex: 1;">
       <div style="min-width: 240px; flex: 1;">
-        <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="🔍 Search by Title, Commission, or Advt Ref No..." class="admin-form-control" style="font-size: 0.875rem;">
+        <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Search by Title, Commission, or Advt Ref No..." class="admin-form-control" style="font-size: 0.875rem;">
       </div>
       <select name="category" class="admin-form-control" style="width: auto; min-width: 160px; font-size: 0.875rem;">
         <option value="">All Commissions</option>
@@ -60,11 +60,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
       </select>
       <select name="status" class="admin-form-control" style="width: auto; min-width: 140px; font-size: 0.875rem;">
         <option value="">All Statuses</option>
-        <option value="Active" <?= $status === 'Active' ? 'selected' : '' ?>>🟢 Active</option>
-        <option value="Upcoming" <?= $status === 'Upcoming' ? 'selected' : '' ?>>⏳ Upcoming</option>
-        <option value="Exam_Phase" <?= $status === 'Exam_Phase' ? 'selected' : '' ?>>📝 Exam Phase</option>
-        <option value="Result_Declared" <?= $status === 'Result_Declared' ? 'selected' : '' ?>>🏆 Result Out</option>
-        <option value="Archived" <?= $status === 'Archived' ? 'selected' : '' ?>>📦 Archived</option>
+        <option value="Active" <?= $status === 'Active' ? 'selected' : '' ?>>Active</option>
+        <option value="Upcoming" <?= $status === 'Upcoming' ? 'selected' : '' ?>>Upcoming</option>
+        <option value="Exam_Phase" <?= $status === 'Exam_Phase' ? 'selected' : '' ?>>Exam Phase</option>
+        <option value="Result_Declared" <?= $status === 'Result_Declared' ? 'selected' : '' ?>>Result Out</option>
+        <option value="Archived" <?= $status === 'Archived' ? 'selected' : '' ?>>Archived</option>
       </select>
     </div>
 
@@ -85,12 +85,12 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">📑 Indexed Job Notifications</h3>
+      <h3 class="admin-card-title">Indexed Job Notifications</h3>
       <p class="admin-card-desc">Showing <strong><?= count($jobs) ?></strong> active government recruitment notices</p>
     </div>
     <div>
       <button onclick="openModal('addJobModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-        ➕ Add New Job Notice
+        + Add New Job Notice
       </button>
     </div>
   </div>
@@ -112,7 +112,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
         <?php if (empty($jobs)): ?>
           <tr>
             <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;"></div>
               <strong>No recruitment notices match your query.</strong>
               <p style="font-size: 0.8rem; margin-top: 0.35rem;">Try adjusting the filter keyword or add a new job notification.</p>
             </td>
@@ -150,23 +150,23 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             </td>
             <td>
               <select class="admin-form-control status-updater-select" data-job-id="<?= $job['id'] ?>" style="padding: 0.3rem 0.5rem; font-size: 0.775rem; width: 140px; font-weight: 600;">
-                <option value="Active" <?= $job['status'] === 'Active' ? 'selected' : '' ?>>🟢 Active</option>
-                <option value="Upcoming" <?= $job['status'] === 'Upcoming' ? 'selected' : '' ?>>⏳ Upcoming</option>
-                <option value="Exam_Phase" <?= $job['status'] === 'Exam_Phase' ? 'selected' : '' ?>>📝 Exam Phase</option>
-                <option value="Result_Declared" <?= $job['status'] === 'Result_Declared' ? 'selected' : '' ?>>🏆 Result Out</option>
-                <option value="Archived" <?= $job['status'] === 'Archived' ? 'selected' : '' ?>>📦 Archived</option>
+                <option value="Active" <?= $job['status'] === 'Active' ? 'selected' : '' ?>>Active</option>
+                <option value="Upcoming" <?= $job['status'] === 'Upcoming' ? 'selected' : '' ?>>Upcoming</option>
+                <option value="Exam_Phase" <?= $job['status'] === 'Exam_Phase' ? 'selected' : '' ?>>Exam Phase</option>
+                <option value="Result_Declared" <?= $job['status'] === 'Result_Declared' ? 'selected' : '' ?>>Result Out</option>
+                <option value="Archived" <?= $job['status'] === 'Archived' ? 'selected' : '' ?>>Archived</option>
               </select>
             </td>
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <a href="/jobs/<?= htmlspecialchars($job['slug']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-icon-only" title="View Public Post">
-                  👁️
+                  
                 </a>
                 <button onclick="editJob(<?= $job['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Job Details">
-                  ✏️
+                  
                 </button>
                 <button onclick="deleteJob(<?= $job['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Notification">
-                  🗑️
+                  
                 </button>
               </div>
             </td>
@@ -181,7 +181,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addJobModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">➕ Add Official Job Notification</h3>
+      <h3 class="admin-modal-title">+ Add Official Job Notification</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addJobModal')">&times;</button>
     </div>
 
@@ -298,7 +298,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editJobModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">✏️ Edit Job Notification</h3>
+      <h3 class="admin-modal-title"> Edit Job Notification</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editJobModal')">&times;</button>
     </div>
 
@@ -345,11 +345,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <div class="admin-form-group">
             <label class="admin-form-label">Live Status</label>
             <select name="status" id="editJobStatus" class="admin-form-control">
-              <option value="Active">🟢 Active</option>
-              <option value="Upcoming">⏳ Upcoming</option>
-              <option value="Exam_Phase">📝 Exam Phase</option>
-              <option value="Result_Declared">🏆 Result Out</option>
-              <option value="Archived">📦 Archived</option>
+              <option value="Active">Active</option>
+              <option value="Upcoming">Upcoming</option>
+              <option value="Exam_Phase">Exam Phase</option>
+              <option value="Result_Declared">Result Out</option>
+              <option value="Archived">Archived</option>
             </select>
           </div>
         </div>

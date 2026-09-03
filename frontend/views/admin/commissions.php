@@ -16,7 +16,7 @@ foreach ($commissions as &$c) {
 $pageTitle = "Manage Commissions — Admin Control Center";
 $adminPageTitle = "Commissions";
 $adminPageHeading = "Government Recruiting Commissions & Constitutional Bodies Directory";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addCommissionModal\')" class="admin-btn admin-btn-primary admin-btn-sm">➕ Create Commission</button>';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addCommissionModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Create Commission</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -26,7 +26,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Total Commissions</span>
-      <div class="admin-kpi-icon ruby">🏛️</div>
+      <div class="admin-kpi-icon ruby"></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--primary-ruby);"><?= number_format(count($commissions)) ?></div>
     <div class="admin-kpi-subtext">
@@ -48,7 +48,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Total Linked Notices</span>
-      <div class="admin-kpi-icon blue">📑</div>
+      <div class="admin-kpi-icon blue"></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-blue);"><?= number_format(array_sum(array_column($commissions, 'active_notices'))) ?></div>
     <div class="admin-kpi-subtext">
@@ -61,11 +61,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">🏛️ Government Recruiting Commissions</h3>
+      <h3 class="admin-card-title">Government Recruiting Commissions</h3>
       <p class="admin-card-desc">Showing <strong><?= count($commissions) ?></strong> recruiting authorities with public dossiers and recruitment matrices</p>
     </div>
     <button onclick="openModal('addCommissionModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      ➕ Create Commission
+      + Create Commission
     </button>
   </div>
 
@@ -87,7 +87,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
         <?php if (empty($commissions)): ?>
           <tr id="emptyRow">
             <td colspan="8" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏛️</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;"></div>
               <strong>No recruiting commissions registered yet.</strong>
               <p style="font-size: 0.8rem; margin-top: 0.35rem;">Click "Create Commission" above to register your first body.</p>
             </td>
@@ -101,14 +101,14 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             </td>
             <td>
               <div style="display: flex; align-items: center; gap: 0.65rem;">
-                <div style="font-size: 1.4rem; line-height: 1;"><?= $comm['emblem'] ?: '🏛️' ?></div>
+                <div style="font-size: 1.4rem; line-height: 1;"><?= $comm['emblem'] ?: '' ?></div>
                 <div>
                   <div style="font-weight: 700; color: var(--text-dark); font-size: 0.95rem;">
                     <?= htmlspecialchars($comm['name']) ?>
                   </div>
                   <?php if (!empty($comm['website'])): ?>
                     <a href="<?= htmlspecialchars($comm['website']) ?>" target="_blank" style="font-size: 0.75rem; color: var(--primary-ruby); text-decoration: none;">
-                      🌐 <?= htmlspecialchars(parse_url($comm['website'], PHP_URL_HOST) ?: $comm['website']) ?> ↗
+                      <?= htmlspecialchars(parse_url($comm['website'], PHP_URL_HOST) ?: $comm['website']) ?> ↗
                     </a>
                   <?php endif; ?>
                 </div>
@@ -138,13 +138,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <a href="/commissions/<?= htmlspecialchars($comm['slug']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-icon-only" title="View Public Commission Dossier">
-                  👁️
+                  
                 </a>
                 <button onclick="editCommission(<?= $comm['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Commission">
-                  ✏️
+                  
                 </button>
                 <button onclick="deleteCommission(<?= $comm['id'] ?>, '<?= htmlspecialchars(addslashes($comm['name'])) ?>')" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Commission">
-                  🗑️
+                  
                 </button>
               </div>
             </td>
@@ -159,7 +159,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addCommissionModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">➕ Register New Recruiting Commission</h3>
+      <h3 class="admin-modal-title">+ Register New Recruiting Commission</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addCommissionModal')">&times;</button>
     </div>
 
@@ -180,7 +180,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 
           <div class="admin-form-group">
             <label class="admin-form-label">Icon / Emblem</label>
-            <input type="text" name="emblem" value="🏛️" class="admin-form-control" style="text-align: center; font-size: 1.25rem;">
+            <input type="text" name="emblem" value="" class="admin-form-control" style="text-align: center; font-size: 1.25rem;">
           </div>
         </div>
 
@@ -246,7 +246,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editCommissionModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">✏️ Edit Commission Information</h3>
+      <h3 class="admin-modal-title"> Edit Commission Information</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editCommissionModal')">&times;</button>
     </div>
 
@@ -396,7 +396,7 @@ async function editCommission(id) {
     document.getElementById('edit_comm_name').value = c.name || '';
     document.getElementById('edit_comm_short_name').value = c.short_name || '';
     document.getElementById('edit_comm_slug').value = c.slug || '';
-    document.getElementById('edit_comm_emblem').value = c.emblem || '🏛️';
+    document.getElementById('edit_comm_emblem').value = c.emblem || '';
     document.getElementById('edit_comm_category').value = c.category || '';
     document.getElementById('edit_comm_filter_keyword').value = c.filter_keyword || '';
     document.getElementById('edit_comm_website').value = c.website || '';

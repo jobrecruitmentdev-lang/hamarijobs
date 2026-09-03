@@ -93,7 +93,7 @@ require_once __DIR__ . '/partials/header.php';
   <!-- Declared Results Section -->
   <div class="content-box" style="margin-bottom: 3rem;">
     <h3 class="content-box-title">
-      🏆 Declared Results & Merit Lists
+      Declared Results & Merit Lists
     </h3>
 
     <div style="overflow-x: auto;">
@@ -140,9 +140,9 @@ require_once __DIR__ . '/partials/header.php';
                 </td>
                 <td>
                   <?php
-                    $lbl = '🏆 Result Declared';
+                    $lbl = 'Result Declared';
                     if ($ev['event_type'] === 'FINAL_MERIT_LIST') $lbl = '📜 Merit List';
-                    elseif ($ev['event_type'] === 'CUTOFF_RELEASED') $lbl = '📊 Cutoff Score';
+                    elseif ($ev['event_type'] === 'CUTOFF_RELEASED') $lbl = 'Cutoff Score';
                     elseif ($ev['event_type'] === 'ANSWER_KEY_RELEASED') $lbl = '🔑 Answer Key';
                   ?>
                   <span class="badge-active"><?= $lbl ?></span>
@@ -168,7 +168,7 @@ require_once __DIR__ . '/partials/header.php';
   <!-- Cutoff Marks Benchmarks Table -->
   <div class="content-box">
     <h3 class="content-box-title">
-      📈 Official Category Cutoff Marks Benchmarks
+      Official Category Cutoff Marks Benchmarks
     </h3>
 
     <div style="overflow-x: auto;">

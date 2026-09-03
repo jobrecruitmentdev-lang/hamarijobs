@@ -24,7 +24,7 @@ $recruitmentsList = $db->query("
 $pageTitle = "Manage Admit Cards & Exam Dates — Admin Control Center";
 $adminPageTitle = "Admit Cards";
 $adminPageHeading = "Admit Cards, Hall Tickets & Exam Schedule Intelligence";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addEventModal\')" class="admin-btn admin-btn-primary admin-btn-sm">➕ Create Admit Card Notice</button>';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addEventModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Create Admit Card Notice</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -34,7 +34,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Total Notices</span>
-      <div class="admin-kpi-icon ruby">🎫</div>
+      <div class="admin-kpi-icon ruby"></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--primary-ruby);"><?= number_format(count($events)) ?></div>
     <div class="admin-kpi-subtext">
@@ -45,7 +45,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Live Admit Cards</span>
-      <div class="admin-kpi-icon emerald">⚡</div>
+      <div class="admin-kpi-icon emerald"></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-emerald);"><?= number_format(count(array_filter($events, fn($e) => $e['event_type'] === 'ADMIT_CARD_RELEASED'))) ?></div>
     <div class="admin-kpi-subtext">
@@ -69,11 +69,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">🎫 Official Admit Cards & Hall Tickets Tracker</h3>
+      <h3 class="admin-card-title">Official Admit Cards & Hall Tickets Tracker</h3>
       <p class="admin-card-desc">Showing <strong><?= count($events) ?></strong> published hall tickets and exam schedules across national recruiting agencies</p>
     </div>
     <button onclick="openModal('addEventModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      ➕ Create Admit Card Notice
+      + Create Admit Card Notice
     </button>
   </div>
 
@@ -94,7 +94,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
         <?php if (empty($events)): ?>
           <tr id="emptyRow">
             <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎫</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;"></div>
               <strong>No admit card notices published yet.</strong>
               <p style="font-size: 0.8rem; margin-top: 0.35rem;">Click "Create Admit Card Notice" above to publish a new hall ticket or exam date.</p>
             </td>
@@ -129,13 +129,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td>
               <?php
                 $badgeClass = 'badge-active';
-                $label = '🎫 Admit Card';
+                $label = 'Admit Card';
                 if ($ev['event_type'] === 'EXAM_DATE') {
                     $badgeClass = 'badge-urgent';
                     $label = '📅 Exam Date';
                 } elseif ($ev['event_type'] === 'CORRECTION_WINDOW_OPENED') {
                     $badgeClass = 'badge-org';
-                    $label = '✏️ Correction';
+                    $label = ' Correction';
                 }
               ?>
               <span class="admin-badge <?= $badgeClass ?>" style="font-size: 0.72rem;">
@@ -153,7 +153,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td>
               <?php if (!empty($ev['reference_url'])): ?>
                 <a href="<?= htmlspecialchars($ev['reference_url']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-sm" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
-                  📥 Portal ↗
+                  Portal ↗
                 </a>
               <?php else: ?>
                 <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
@@ -162,10 +162,10 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <button onclick="editEvent(<?= $ev['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Event Notice">
-                  ✏️
+                  
                 </button>
                 <button onclick="deleteEvent(<?= $ev['id'] ?>, '<?= htmlspecialchars(addslashes($ev['event_title'])) ?>')" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Notice">
-                  🗑️
+                  
                 </button>
               </div>
             </td>
@@ -180,7 +180,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addEventModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">➕ Publish Admit Card or Exam Notice</h3>
+      <h3 class="admin-modal-title">+ Publish Admit Card or Exam Notice</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addEventModal')">&times;</button>
     </div>
 
@@ -197,9 +197,9 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <div class="admin-form-group">
             <label class="admin-form-label">Notice Type *</label>
             <select name="event_type" required class="admin-form-control">
-              <option value="ADMIT_CARD_RELEASED">🎫 ADMIT_CARD_RELEASED</option>
+              <option value="ADMIT_CARD_RELEASED">ADMIT_CARD_RELEASED</option>
               <option value="EXAM_DATE">📅 EXAM_DATE</option>
-              <option value="CORRECTION_WINDOW_OPENED">✏️ CORRECTION_WINDOW_OPENED</option>
+              <option value="CORRECTION_WINDOW_OPENED"> CORRECTION_WINDOW_OPENED</option>
             </select>
           </div>
         </div>
@@ -264,7 +264,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editEventModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">✏️ Edit Admit Card / Exam Notice</h3>
+      <h3 class="admin-modal-title"> Edit Admit Card / Exam Notice</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editEventModal')">&times;</button>
     </div>
 
@@ -283,9 +283,9 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <div class="admin-form-group">
             <label class="admin-form-label">Notice Type *</label>
             <select name="event_type" id="edit_event_type" required class="admin-form-control">
-              <option value="ADMIT_CARD_RELEASED">🎫 ADMIT_CARD_RELEASED</option>
+              <option value="ADMIT_CARD_RELEASED">ADMIT_CARD_RELEASED</option>
               <option value="EXAM_DATE">📅 EXAM_DATE</option>
-              <option value="CORRECTION_WINDOW_OPENED">✏️ CORRECTION_WINDOW_OPENED</option>
+              <option value="CORRECTION_WINDOW_OPENED"> CORRECTION_WINDOW_OPENED</option>
             </select>
           </div>
         </div>

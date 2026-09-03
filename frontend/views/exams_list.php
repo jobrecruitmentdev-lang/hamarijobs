@@ -76,7 +76,7 @@ require_once __DIR__ . '/partials/header.php';
   <!-- Exam Hubs Grid -->
   <?php if (empty($exams)): ?>
     <div class="content-box" style="text-align: center; padding: 4rem 1.5rem;">
-      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;"></div>
       <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: var(--text-primary);">No matching Exam Hubs found</h3>
       <p style="color: var(--text-secondary); margin-top: 0.25rem;">Try searching for "CGL", "CSE", "NTPC", or "PO".</p>
       <a href="/exams" class="btn btn-primary" style="margin-top: 1.5rem;">Reset Filter</a>
@@ -106,7 +106,7 @@ require_once __DIR__ . '/partials/header.php';
 
           <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem; display: flex; gap: 0.5rem;">
             <a href="/exams/<?= htmlspecialchars($exam['slug']) ?>" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;">
-              🧠 View Pattern, Syllabus & Cutoffs &rarr;
+              View Pattern, Syllabus & Cutoffs &rarr;
             </a>
           </div>
         </div>

@@ -144,7 +144,7 @@ require_once __DIR__ . '/partials/header.php';
   <!-- Job Cards Grid -->
   <?php if (empty($jobs)): ?>
     <div style="text-align: center; padding: 4.5rem 1.5rem; background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
-      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;"></div>
       <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; color: var(--text-primary);">
         No matching official government recruitments found
       </h3>
@@ -160,7 +160,7 @@ require_once __DIR__ . '/partials/header.php';
           $startDateStr = !empty($job['start_date']) ? date('d M Y', strtotime($job['start_date'])) : 'As per Notice';
           $lastDateStr = !empty($job['last_date']) ? date('d M Y', strtotime($job['last_date'])) : 'Open Notice';
           
-          $urgencyBadge = '🟢 Active Opening';
+          $urgencyBadge = 'Active Opening';
           $urgencyClass = 'badge-active';
           if (!empty($job['last_date'])) {
               $diffDays = ceil((strtotime($job['last_date']) - time()) / 86400);
@@ -168,10 +168,10 @@ require_once __DIR__ . '/partials/header.php';
                   $urgencyBadge = '⌛ Registration Closed';
                   $urgencyClass = 'badge-closed';
               } elseif ($diffDays <= 7) {
-                  $urgencyBadge = "🔥 Ending Soon ({$diffDays} Days Left)";
+                  $urgencyBadge = "Ending Soon ({$diffDays} Days Left)";
                   $urgencyClass = 'badge-urgent';
               } else {
-                  $urgencyBadge = "⚡ Apply by {$lastDateStr}";
+                  $urgencyBadge = "Apply by {$lastDateStr}";
                   $urgencyClass = 'badge-active';
               }
           }
@@ -199,42 +199,42 @@ require_once __DIR__ . '/partials/header.php';
             <!-- 6-Cell Complete Data Matrix -->
             <div class="job-metrics-matrix">
               <div class="metric-cell">
-                <span class="metric-cell-label">👥 Vacancies</span>
+                <span class="metric-cell-label">Vacancies</span>
                 <span class="metric-cell-val" style="color: var(--primary-red); font-weight: 800;" title="<?= $job['total_vacancies'] ? number_format($job['total_vacancies']) . ' Posts' : 'As per Notice' ?>">
                   <?= $job['total_vacancies'] ? number_format($job['total_vacancies']) . ' Posts' : 'As per Notice' ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">🎓 Qualification</span>
+                <span class="metric-cell-label">Qualification</span>
                 <span class="metric-cell-val" title="<?= htmlspecialchars($job['qualification_level'] ?: 'Graduate Degree') ?>">
                   <?= htmlspecialchars($job['qualification_level'] ?: 'Graduate Degree') ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">💰 Pay Scale</span>
+                <span class="metric-cell-label">Pay Scale</span>
                 <span class="metric-cell-val" style="color: var(--emerald);" title="<?= htmlspecialchars($job['pay_scale'] ?: '7th CPC Matrix') ?>">
                   <?= htmlspecialchars($job['pay_scale'] ?: '7th CPC Matrix') ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">🎂 Age Limit</span>
+                <span class="metric-cell-label">Age Limit</span>
                 <span class="metric-cell-val" title="<?= htmlspecialchars($job['age_limit'] ?: '18 - 32 Years') ?>">
                   <?= htmlspecialchars($job['age_limit'] ?: '18 - 32 Years') ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">💳 Application Fee</span>
+                <span class="metric-cell-label">Application Fee</span>
                 <span class="metric-cell-val" title="<?= htmlspecialchars($job['fee_details'] ?: 'Gen: ₹100 / SC: ₹0') ?>">
                   <?= htmlspecialchars($job['fee_details'] ?: 'Gen: ₹100 / SC: ₹0') ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">📍 Cadre / Region</span>
+                <span class="metric-cell-label">Cadre / Region</span>
                 <span class="metric-cell-val" title="<?= htmlspecialchars($job['state_code'] === 'ALL' ? 'All India' : $job['state_code']) ?>">
                   <?= htmlspecialchars($job['state_code'] === 'ALL' ? 'All India' : $job['state_code']) ?>
                 </span>
@@ -244,7 +244,7 @@ require_once __DIR__ . '/partials/header.php';
             <!-- Dates Row -->
             <div class="job-dates-row">
               <div class="job-dates-header">
-                <span class="job-dates-label">📅 Application Window</span>
+                <span class="job-dates-label">Application Window</span>
                 <span class="<?= $urgencyClass ?>"><?= $urgencyBadge ?></span>
               </div>
               <div class="job-dates-val">
@@ -258,20 +258,20 @@ require_once __DIR__ . '/partials/header.php';
           <!-- Structured 2-Tier Actions: Full Details CTA + Secondary Quick Actions -->
           <div class="job-card-actions">
             <a href="/jobs/<?= htmlspecialchars($job['slug']) ?>" class="btn btn-primary btn-card-main">
-              📄 Full Details &amp; Syllabus &rarr;
+              Full Details &amp; Syllabus &rarr;
             </a>
 
             <?php if (!empty($job['official_apply_url']) || !empty($job['primary_notification_url'])): ?>
               <div class="job-card-secondary-actions">
                 <?php if (!empty($job['official_apply_url'])): ?>
                   <a href="<?= htmlspecialchars($job['official_apply_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-card-sub">
-                    🚀 Apply Online
+                    Apply Online
                   </a>
                 <?php endif; ?>
 
                 <?php if (!empty($job['primary_notification_url'])): ?>
                   <a href="<?= htmlspecialchars($job['primary_notification_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-glass btn-card-sub" title="Official Gazette PDF Notice">
-                    📥 Official PDF
+                    Official PDF
                   </a>
                 <?php endif; ?>
               </div>

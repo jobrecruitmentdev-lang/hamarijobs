@@ -127,7 +127,7 @@ require_once __DIR__ . '/partials/header.php';
                 </td>
                 <td>
                   <?php if ($isReleased): ?>
-                    <span class="badge-active">🟢 Available Now</span>
+                    <span class="badge-active">Available Now</span>
                   <?php else: ?>
                     <span class="badge-urgent">⏳ Releasing Soon</span>
                   <?php endif; ?>
@@ -135,7 +135,7 @@ require_once __DIR__ . '/partials/header.php';
                 <td>
                   <?php if (!empty($downloadUrl)): ?>
                     <a href="<?= htmlspecialchars($downloadUrl) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
-                      📥 Download Hall Ticket &rarr;
+                      Download Hall Ticket &rarr;
                     </a>
                   <?php else: ?>
                     <span style="color: var(--text-muted); font-size: 0.8rem;">Notice Pending</span>

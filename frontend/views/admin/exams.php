@@ -9,7 +9,7 @@ $exams = $db->query("SELECT * FROM exams ORDER BY category ASC, name ASC")->fetc
 $pageTitle = "Manage Exam Hubs — Admin Control Center";
 $adminPageTitle = "Exam Hubs";
 $adminPageHeading = "Autonomous Examination Hubs & Pattern Directory";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addExamModal\')" class="admin-btn admin-btn-primary admin-btn-sm">➕ Create Exam Hub</button>';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addExamModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Create Exam Hub</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -18,11 +18,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">🧠 Registered Examination Hubs</h3>
+      <h3 class="admin-card-title">Registered Examination Hubs</h3>
       <p class="admin-card-desc">Showing <strong><?= count($exams) ?></strong> national and state recruitment test hubs with structured patterns and cutoffs</p>
     </div>
     <button onclick="openModal('addExamModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      ➕ Create Exam Hub
+      + Create Exam Hub
     </button>
   </div>
 
@@ -43,7 +43,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
         <?php if (empty($exams)): ?>
           <tr>
             <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🧠</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;"></div>
               <strong>No exam hubs registered yet.</strong>
               <p style="font-size: 0.8rem; margin-top: 0.35rem;">Click "Create Exam Hub" above to register your first examination.</p>
             </td>
@@ -82,13 +82,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <a href="/exams/<?= htmlspecialchars($ex['slug']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-icon-only" title="View Public Exam Hub">
-                  👁️
+                  
                 </a>
                 <button onclick="editExam(<?= $ex['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Exam Hub">
-                  ✏️
+                  
                 </button>
                 <button onclick="deleteExam(<?= $ex['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Exam Hub">
-                  🗑️
+                  
                 </button>
               </div>
             </td>
@@ -103,7 +103,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addExamModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">➕ Create New Exam Intelligence Hub</h3>
+      <h3 class="admin-modal-title">+ Create New Exam Intelligence Hub</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addExamModal')">&times;</button>
     </div>
 
@@ -181,7 +181,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editExamModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">✏️ Edit Examination Hub</h3>
+      <h3 class="admin-modal-title"> Edit Examination Hub</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editExamModal')">&times;</button>
     </div>
 

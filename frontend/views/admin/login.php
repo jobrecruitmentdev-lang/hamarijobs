@@ -18,7 +18,7 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($pageTitle) ?></title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
   <link rel="stylesheet" href="/assets/css/admin.css">
   <style>
     body {
@@ -58,7 +58,7 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
 
 <div class="auth-box">
   <div style="text-align: center; margin-bottom: 2rem;">
-    <div class="auth-emblem-wrap">🛡️</div>
+    <div class="auth-emblem-wrap"></div>
     <h1 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 900; color: var(--text-dark); letter-spacing: -0.02em;">
       Admin Command Center
     </h1>
@@ -105,8 +105,7 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
           style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted);"
           title="Toggle Password Visibility"
         >
-          👁️
-        </button>
+          </button>
       </div>
     </div>
 
@@ -149,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleBtn.addEventListener('click', () => {
       const isPwd = pwdInput.type === 'password';
       pwdInput.type = isPwd ? 'text' : 'password';
-      toggleBtn.innerText = isPwd ? '🔒' : '👁️';
+      toggleBtn.innerText = isPwd ? '🔒' : '';
     });
   }
 

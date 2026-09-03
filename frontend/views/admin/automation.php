@@ -36,7 +36,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
     <div>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
         <span class="admin-badge" style="background: var(--color-purple-bg); color: var(--color-purple); border: 1px solid var(--color-purple-border); font-size: 0.7rem; font-weight: 800;">STAGE 2: HUBS</span>
-        <span style="font-size: 1.25rem;">🧠</span>
+        <span style="font-size: 1.25rem;"></span>
       </div>
       <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: var(--text-dark); margin-bottom: 0.35rem;">
         Rebuild Exam Intelligence Hubs
@@ -46,7 +46,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
       </p>
     </div>
     <button class="admin-btn admin-btn-outline admin-btn-sm automation-trigger-btn" data-action="exams" style="width: 100%;">
-      🧠 Seed Exam Hubs
+      Seed Exam Hubs
     </button>
   </div>
 

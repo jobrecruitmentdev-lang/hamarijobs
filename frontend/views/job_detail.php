@@ -84,7 +84,7 @@ require_once __DIR__ . '/partials/header.php';
   
   <!-- Clean Editorial Breadcrumb -->
   <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-    <a href="/" style="color: var(--text-secondary); text-decoration: none;">🏠 Home</a> 
+    <a href="/" style="color: var(--text-secondary); text-decoration: none;">Home</a> 
     <span>&rsaquo;</span>
     <a href="/government-jobs" style="color: var(--text-secondary); text-decoration: none;">Government Jobs</a> 
     <span>&rsaquo;</span>

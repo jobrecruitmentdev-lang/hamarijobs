@@ -75,10 +75,10 @@ require_once __DIR__ . '/partials/header.php';
 
         <div style="display: flex; gap: 0.75rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
           <a href="/commissions/<?= $comm['slug'] ?>" class="btn btn-primary btn-sm" style="flex: 1;">
-            🏛️ View Commission Dossier &rarr;
+            View Commission Dossier &rarr;
           </a>
           <a href="<?= htmlspecialchars($comm['website']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" title="Official Website">
-            🌐 Portal
+            Portal
           </a>
         </div>
       </div>
