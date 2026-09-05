@@ -26,7 +26,7 @@ $pageDesc = $pageDesc ?? "India's premier official government recruitment intell
     <div class="container ticker-wrap">
       <span class="ticker-label">
         <span class="pulse-dot"></span>
-        LIVE GAZETTES
+        LIVE DATA
       </span>
       <div class="ticker-marquee">
         <div class="ticker-content">
