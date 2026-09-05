@@ -171,6 +171,13 @@ class AdminController {
             return;
         }
 
+        // Security Hardening: Exclusively authorize designated master admin email
+        if (strtolower(trim($user['email'])) !== 'hamaritumhari786@gmail.com') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Access denied: Unauthorized admin account.']);
+            return;
+        }
+
         // Strictly verify password using cryptographic hash
         $isValid = password_verify($password, $user['password_hash']);
         if (!$isValid && str_starts_with($user['password_hash'], '$2b$')) {

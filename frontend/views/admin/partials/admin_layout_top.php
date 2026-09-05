@@ -14,7 +14,7 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$adminUser = $_SESSION['admin_user'] ?? ['username' => 'Admin', 'email' => 'admin@jobrecruitai.com'];
+$adminUser = $_SESSION['admin_user'] ?? ['username' => 'Admin', 'email' => 'hamaritumhari786@gmail.com'];
 $currentAdminPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $pageTitle = $pageTitle ?? "Government Recruitment Intelligence — Admin Control Center";
 require_once __DIR__ . '/admin_icons.php';

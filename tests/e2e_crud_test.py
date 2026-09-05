@@ -20,8 +20,8 @@ def run_tests():
 
     # 1. Login to Admin
     login_res = session.post(f"{BASE_URL}/api/v1/admin/login", json={
-        "email": "admin@jobrecruitai.com",
-        "password": "Admin@123"
+        "email": "hamaritumhari786@gmail.com",
+        "password": "Hostinger ki masi 4786"
     })
     assert login_res.status_code == 200, f"Login failed: {login_res.text}"
     login_data = login_res.json()
@@ -103,12 +103,12 @@ def run_tests():
     comm_id = create_comm_res.json().get('id')
     print(f"[PASS] Created Commission #{comm_id} (slug: e2e-test-comm)")
 
-    # Verify Frontend Homepage renders newly created commission dynamically
-    home_page_res = requests.get(f"{BASE_URL}/")
+    # Verify Frontend Commissions Hub renders newly created commission dynamically
+    home_page_res = requests.get(f"{BASE_URL}/commissions")
     assert home_page_res.status_code == 200
-    assert "e2e-test-comm" in home_page_res.text, "Newly created commission not visible on homepage!"
-    assert "ETCC" in home_page_res.text, "Commission short name not visible on homepage!"
-    print("[PASS] Verified newly created Commission is dynamically visible on Homepage grid!")
+    assert "e2e-test-comm" in home_page_res.text, "Newly created commission not visible on commissions page!"
+    assert "ETCC" in home_page_res.text, "Commission short name not visible on commissions page!"
+    print("[PASS] Verified newly created Commission is dynamically visible on Commissions hub!")
 
     # Edit Commission
     edit_comm_res = session.post(f"{BASE_URL}/api/v1/admin/commissions/update", json={

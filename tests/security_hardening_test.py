@@ -55,8 +55,8 @@ def test_security_hardening():
     print("\n--- [TEST 2] Testing CSRF Protection & Token Validation ---")
     admin_session = requests.Session()
     login_res = admin_session.post(f"{BASE_URL}/api/v1/admin/login", json={
-        "identity": "admin@jobrecruitai.com",
-        "password": "Admin@123"
+        "identity": "hamaritumhari786@gmail.com",
+        "password": "Hostinger ki masi 4786"
     })
     assert login_res.status_code == 200, f"Admin login failed: {login_res.text}"
     login_data = login_res.json()

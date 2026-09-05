@@ -132,9 +132,9 @@ To automatically check for new government recruitments and keep sitemaps updated
 
 2. **Admin Console Access**:
    - URL: `https://yourdomain.com/admin/login`
-   - **Default Email**: `admin@hamarijobs.com`
-   - **Default Password**: `Admin@123456`
-   *(Immediately update your password in the admin settings after first login).*
+   - **Master Admin Email**: `hamaritumhari786@gmail.com`
+   - **Master Admin Password**: `Hostinger ki masi 4786`
+   *(Protected with strict email whitelist guard; no other credentials can access the admin console).*
 
 ---
 
