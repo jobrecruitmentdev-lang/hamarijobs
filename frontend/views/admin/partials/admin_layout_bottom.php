@@ -60,6 +60,34 @@ document.addEventListener('click', (e) => {
     e.target.classList.remove('active');
   }
 });
+
+// 3. Universal CSRF Auto-Injector for Admin Fetch API
+(function() {
+  const originalFetch = window.fetch;
+  window.fetch = function(input, init) {
+    init = init || {};
+    const method = (init.method || 'GET').toUpperCase();
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      const token = csrfMeta ? csrfMeta.getAttribute('content') : '';
+      if (token) {
+        if (!init.headers) {
+          init.headers = {};
+        }
+        if (init.headers instanceof Headers) {
+          if (!init.headers.has('X-CSRF-Token')) {
+            init.headers.set('X-CSRF-Token', token);
+          }
+        } else if (Array.isArray(init.headers)) {
+          init.headers.push(['X-CSRF-Token', token]);
+        } else {
+          init.headers['X-CSRF-Token'] = token;
+        }
+      }
+    }
+    return originalFetch.call(this, input, init);
+  };
+})();
 </script>
 <script src="/assets/js/app.js"></script>
 </body>

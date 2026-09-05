@@ -42,7 +42,8 @@ class TestGovernmentRecruitmentIntelligence(unittest.TestCase):
         required_tables = [
             'source_registry', 'recruitments', 'recruitment_events', 'exams',
             'exam_phases', 'exam_patterns', 'exam_syllabus', 'cutoff_records',
-            'articles', 'fact_claims', 'crawl_runs', 'jobs'
+            'articles', 'fact_claims', 'crawl_runs', 'jobs',
+            'automation_runs', 'notice_hash_cache'
         ]
         for tbl in required_tables:
             self.assertIn(tbl, tables, f"Database table '{tbl}' is missing!")
@@ -113,10 +114,10 @@ class TestGovernmentRecruitmentIntelligence(unittest.TestCase):
     def test_07_http_api_endpoints(self):
         """Verify PHP REST API returns HTTP 200 with valid JSON"""
         endpoints = [
-            'http://127.0.0.1:8000/api/v1/jobs',
-            'http://127.0.0.1:8000/api/v1/exams',
-            'http://127.0.0.1:8000/api/v1/articles',
-            'http://127.0.0.1:8000/api/v1/admin/metrics'
+            'http://127.0.0.1:8080/api/v1/jobs',
+            'http://127.0.0.1:8080/api/v1/exams',
+            'http://127.0.0.1:8080/api/v1/articles',
+            'http://127.0.0.1:8080/api/v1/admin/metrics'
         ]
         for url in endpoints:
             req = urllib.request.Request(url, headers={'X-Internal-Secret': settings.INTERNAL_API_SECRET})
@@ -124,6 +125,63 @@ class TestGovernmentRecruitmentIntelligence(unittest.TestCase):
                 self.assertEqual(response.status, 200, f"Endpoint {url} failed with status {response.status}")
                 data = json.loads(response.read().decode())
                 self.assertTrue(data.get("success", False))
+
+    def test_08_fact_verification_shield(self):
+        """Verify Fact-Verification Double Shield detects domain mismatches & vacancy anomalies"""
+        from automation.intelligence.verification import FactVerificationShield
+        from automation.llm.schema import StructuredRecruitmentExtraction, SalaryDetails, AgeLimit
+
+        # Anomaly case: Non-government domain and excessive vacancies
+        fake_rec = StructuredRecruitmentExtraction(
+            organization="Private Corp",
+            title="Fake Job Notice 2026",
+            total_vacancies=999999,
+            salary=SalaryDetails(pay_scale_text="Level 7"),
+            age_limit=AgeLimit(min_age=18, max_age=30),
+            educational_qualification="Graduate",
+            official_apply_url="https://fake-freejob-portal.com",
+            confidence_score=90
+        )
+        status, flags = FactVerificationShield.verify_recruitment_data(fake_rec, {"domain": "fake-freejob-portal.com"})
+        self.assertEqual(status, "REVIEW_PENDING")
+        self.assertIn("ANOMALY_UNVERIFIED_APPLY_DOMAIN", flags)
+        self.assertIn("ANOMALY_UNREALISTIC_VACANCY_COUNT", flags)
+
+    def test_09_hash_change_detector(self):
+        """Verify Cryptographic SHA-256 Hash Change Detector skips duplicate content"""
+        import uuid
+        from automation.scrapers.hash_detector import NoticeHashDetector
+        detector = NoticeHashDetector()
+        
+        test_domain = "upsc.gov.in"
+        test_url = f"https://upsc.gov.in/test_notice_{uuid.uuid4().hex[:8]}.pdf"
+        test_content = "Official Notification Text for CDS 2026 Examination"
+        h = detector.calculate_sha256(test_content)
+        
+        # First time: must detect as changed / new
+        changed = detector.has_content_changed(test_domain, test_url, h)
+        self.assertTrue(changed)
+        
+        # Record it
+        detector.record_notice_hash(test_domain, test_url, h, "CDS 2026")
+        
+        # Second time: identical hash must return changed = False
+        changed_second = detector.has_content_changed(test_domain, test_url, h)
+        self.assertFalse(changed_second)
+
+    def test_10_daemon_status_and_runs(self):
+        """Verify Daemon Status and Automation Runs APIs respond properly"""
+        urls = [
+            'http://127.0.0.1:8080/api/v1/admin/daemon/status',
+            'http://127.0.0.1:8080/api/v1/admin/automation-runs',
+            'http://127.0.0.1:8080/api/v1/admin/review-queue'
+        ]
+        for u in urls:
+            req = urllib.request.Request(u, headers={'X-Internal-Secret': settings.INTERNAL_API_SECRET})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                self.assertEqual(resp.status, 200)
+                d = json.loads(resp.read().decode())
+                self.assertTrue(d.get("success", False))
 
 if __name__ == '__main__':
     unittest.main()

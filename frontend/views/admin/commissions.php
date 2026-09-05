@@ -7,16 +7,18 @@ $db = Database::getConnection();
 $commissions = $db->query("SELECT * FROM commissions ORDER BY category ASC, name ASC")->fetchAll();
 
 // Count active recruitments per commission
-foreach ($commissions as &$c) {
+foreach ($commissions as $idx => $c) {
+    $filterKw = !empty($c['filter_keyword']) ? $c['filter_keyword'] : $c['short_name'];
     $stmt = $db->prepare("SELECT COUNT(*) as c FROM recruitments WHERE (organization_name LIKE ? OR title LIKE ?) AND status = 'Active'");
-    $stmt->execute(["%{$c['filter_keyword']}%", "%{$c['filter_keyword']}%"]);
-    $c['active_notices'] = $stmt->fetch()['c'] ?? 0;
+    $stmt->execute(["%{$filterKw}%", "%{$filterKw}%"]);
+    $commissions[$idx]['active_notices'] = $stmt->fetch()['c'] ?? 0;
 }
 
 $pageTitle = "Manage Commissions — Admin Control Center";
 $adminPageTitle = "Commissions";
 $adminPageHeading = "Government Recruiting Commissions & Constitutional Bodies Directory";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addCommissionModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Create Commission</button>';
+require_once __DIR__ . '/partials/admin_icons.php';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addCommissionModal\')" class="admin-btn admin-btn-primary admin-btn-sm">' . admin_icon('plus', '', 14) . ' Create Commission</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -26,7 +28,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Total Commissions</span>
-      <div class="admin-kpi-icon ruby"></div>
+      <div class="admin-kpi-icon ruby"><?= admin_icon('landmark', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--primary-ruby);"><?= number_format(count($commissions)) ?></div>
     <div class="admin-kpi-subtext">
@@ -37,7 +39,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Active Directories</span>
-      <div class="admin-kpi-icon emerald">✅</div>
+      <div class="admin-kpi-icon emerald"><?= admin_icon('check-circle', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-emerald);"><?= number_format(count(array_filter($commissions, fn($c) => !empty($c['is_active'])))) ?></div>
     <div class="admin-kpi-subtext">
@@ -48,7 +50,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Total Linked Notices</span>
-      <div class="admin-kpi-icon blue"></div>
+      <div class="admin-kpi-icon blue"><?= admin_icon('file-text', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-blue);"><?= number_format(array_sum(array_column($commissions, 'active_notices'))) ?></div>
     <div class="admin-kpi-subtext">
@@ -61,11 +63,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">Government Recruiting Commissions</h3>
+      <h3 class="admin-card-title"><?= admin_icon('landmark', '', 18) ?> Government Recruiting Commissions</h3>
       <p class="admin-card-desc">Showing <strong><?= count($commissions) ?></strong> recruiting authorities with public dossiers and recruitment matrices</p>
     </div>
     <button onclick="openModal('addCommissionModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      + Create Commission
+      <?= admin_icon('plus', '', 14) ?> Create Commission
     </button>
   </div>
 
@@ -138,13 +140,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <a href="/commissions/<?= htmlspecialchars($comm['slug']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-icon-only" title="View Public Commission Dossier">
-                  
+                  <?= admin_icon('eye', '', 15) ?>
                 </a>
                 <button onclick="editCommission(<?= $comm['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Commission">
-                  
+                  <?= admin_icon('edit', '', 15) ?>
                 </button>
-                <button onclick="deleteCommission(<?= $comm['id'] ?>, '<?= htmlspecialchars(addslashes($comm['name'])) ?>')" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Commission">
-                  
+                <button onclick="deleteCommission(<?= $comm['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Commission">
+                  <?= admin_icon('trash', '', 15) ?>
                 </button>
               </div>
             </td>
@@ -159,7 +161,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addCommissionModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">+ Register New Recruiting Commission</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('plus', '', 18) ?> Register New Recruiting Commission</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addCommissionModal')">&times;</button>
     </div>
 
@@ -170,21 +172,35 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
         <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem;">
           <div class="admin-form-group">
             <label class="admin-form-label">Full Official Commission Name *</label>
-            <input type="text" name="name" required placeholder="e.g. Union Public Service Commission (UPSC)" class="admin-form-control">
+            <input type="text" name="name" id="add_comm_name" required placeholder="e.g. Union Public Service Commission (UPSC)" class="admin-form-control">
           </div>
 
           <div class="admin-form-group">
             <label class="admin-form-label">Short Acronym *</label>
-            <input type="text" name="short_name" required placeholder="e.g. UPSC" class="admin-form-control">
+            <input type="text" name="short_name" id="add_comm_short_name" required placeholder="e.g. UPSC" class="admin-form-control">
           </div>
 
           <div class="admin-form-group">
-            <label class="admin-form-label">Icon / Emblem</label>
-            <input type="text" name="emblem" value="" class="admin-form-control" style="text-align: center; font-size: 1.25rem;">
+            <label class="admin-form-label">Vector Icon</label>
+            <select name="emblem" class="admin-form-control">
+              <option value="landmark">Landmark / Constitutional</option>
+              <option value="building-2">Building 2 / Staff Selection</option>
+              <option value="train">Train / Railway Board</option>
+              <option value="bank">Bank / IBPS & SBI</option>
+              <option value="plane">Plane / Defence & Air Force</option>
+              <option value="building">Building / State PSC</option>
+              <option value="shield">Shield / Police & Security</option>
+              <option value="briefcase">Briefcase / PSU & Autonomous</option>
+            </select>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+          <div class="admin-form-group">
+            <label class="admin-form-label">URL Slug (Auto or Custom)</label>
+            <input type="text" name="slug" id="add_comm_slug" placeholder="e.g. upsc" class="admin-form-control">
+          </div>
+
           <div class="admin-form-group">
             <label class="admin-form-label">Category / Jurisdiction</label>
             <input type="text" name="category" placeholder="e.g. Central Constitutional Recruiting Commission" class="admin-form-control">
@@ -192,7 +208,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 
           <div class="admin-form-group">
             <label class="admin-form-label">Search Filter Keyword</label>
-            <input type="text" name="filter_keyword" placeholder="e.g. UPSC (matches recruitment titles)" class="admin-form-control">
+            <input type="text" name="filter_keyword" id="add_comm_filter_keyword" placeholder="e.g. UPSC (matches recruitment titles)" class="admin-form-control">
           </div>
         </div>
 
@@ -236,7 +252,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 
       <div class="admin-modal-footer">
         <button type="button" class="admin-btn admin-btn-glass" onclick="closeModal('addCommissionModal')">Cancel</button>
-        <button type="submit" id="saveCommissionBtn" class="admin-btn admin-btn-primary">💾 Save & Publish Commission</button>
+        <button type="submit" id="saveCommissionBtn" class="admin-btn admin-btn-primary"><?= admin_icon('check', '', 14) ?> Save & Publish Commission</button>
       </div>
     </form>
   </div>
@@ -246,7 +262,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editCommissionModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title"> Edit Commission Information</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('edit', '', 18) ?> Edit Commission Information</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editCommissionModal')">&times;</button>
     </div>
 
@@ -268,8 +284,17 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           </div>
 
           <div class="admin-form-group">
-            <label class="admin-form-label">Icon / Emblem</label>
-            <input type="text" name="emblem" id="edit_comm_emblem" class="admin-form-control" style="text-align: center; font-size: 1.25rem;">
+            <label class="admin-form-label">Vector Icon</label>
+            <select name="emblem" id="edit_comm_emblem" class="admin-form-control">
+              <option value="landmark">Landmark / Constitutional</option>
+              <option value="building-2">Building 2 / Staff Selection</option>
+              <option value="train">Train / Railway Board</option>
+              <option value="bank">Bank / IBPS & SBI</option>
+              <option value="plane">Plane / Defence & Air Force</option>
+              <option value="building">Building / State PSC</option>
+              <option value="shield">Shield / Police & Security</option>
+              <option value="briefcase">Briefcase / PSU & Autonomous</option>
+            </select>
           </div>
         </div>
 
@@ -347,6 +372,28 @@ function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.remove('active');
 }
+
+// Live Slug and Filter Keyword Generator for Add Commission
+document.getElementById('add_comm_short_name')?.addEventListener('input', function() {
+  const shortName = this.value.trim();
+  const slugInput = document.getElementById('add_comm_slug');
+  const kwInput = document.getElementById('add_comm_filter_keyword');
+  
+  if (slugInput && !slugInput.dataset.touched) {
+    slugInput.value = shortName.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+  if (kwInput && !kwInput.dataset.touched) {
+    kwInput.value = shortName;
+  }
+});
+
+document.getElementById('add_comm_slug')?.addEventListener('input', function() {
+  this.dataset.touched = 'true';
+});
+
+document.getElementById('add_comm_filter_keyword')?.addEventListener('input', function() {
+  this.dataset.touched = 'true';
+});
 
 // Add Commission Form Handler
 document.getElementById('addCommissionForm')?.addEventListener('submit', async function(e) {
@@ -445,8 +492,8 @@ document.getElementById('editCommissionForm')?.addEventListener('submit', async 
 });
 
 // Delete Commission
-async function deleteCommission(id, name) {
-  if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+async function deleteCommission(id) {
+  if (!confirm(`Are you sure you want to delete Commission #${id}? This action cannot be undone.`)) {
     return;
   }
 
@@ -460,13 +507,16 @@ async function deleteCommission(id, name) {
 
     if (data.success) {
       const row = document.getElementById(`commission-row-${id}`);
-      if (row) row.remove();
-      alert('✓ ' + data.message);
+      if (row) {
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 250);
+      }
+      alert(data.message || 'Commission deleted successfully!');
     } else {
-      alert('❌ Error: ' + (data.error || 'Failed to delete commission'));
+      alert('Error: ' + (data.error || 'Failed to delete commission'));
     }
   } catch (err) {
-    alert('❌ Connection failed: ' + err.message);
+    alert('Connection failed: ' + err.message);
   }
 }
 </script>

@@ -10,6 +10,10 @@ if (!AdminController::isAuthenticated()) {
     exit;
 }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $adminUser = $_SESSION['admin_user'] ?? ['username' => 'Admin', 'email' => 'admin@jobrecruitai.com'];
 $currentAdminPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $pageTitle = $pageTitle ?? "Government Recruitment Intelligence — Admin Control Center";
@@ -21,10 +25,11 @@ require_once __DIR__ . '/admin_icons.php';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($pageTitle) ?></title>
+  <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
   <link rel="icon" type="image/png" href="/assets/images/logo.png">
   
   <!-- Modern Admin Stylesheet -->
-  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<?= file_exists(__DIR__ . '/../../../public/css/admin.css') ? filemtime(__DIR__ . '/../../../public/css/admin.css') : '2.1' ?>">
 
   <!-- Chart.js for High-Yield Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -38,9 +43,8 @@ require_once __DIR__ . '/admin_icons.php';
 
   <!-- 1. LEFT ADMIN NAVIGATION SIDEBAR -->
   <aside id="adminSidebar" class="admin-sidebar">
-    <div>
-      <!-- Top Brand Emblem -->
-      <div class="admin-sidebar-header">
+    <!-- Top Brand Emblem -->
+    <div class="admin-sidebar-header">
         <a href="/admin/dashboard" class="admin-brand-link" style="display: flex; align-items: center; gap: 0.75rem;">
           <img src="/assets/images/logo.png" alt="HamariJobs" style="width: 38px; height: 38px; object-fit: contain;">
           <div>
@@ -142,12 +146,19 @@ require_once __DIR__ . '/admin_icons.php';
                 <span class="admin-nav-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">DAEMONS</span>
               </a>
             </li>
+            <li style="margin-top: 0.65rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.5rem;">
+              <a href="/" target="_blank" class="admin-nav-link" style="color: var(--primary-ruby); font-weight: 600;">
+                <div class="admin-nav-link-content">
+                  <span class="admin-nav-icon"><?= admin_icon('external-link', '', 18) ?></span>
+                  <span>View Public Site ↗</span>
+                </div>
+              </a>
+            </li>
           </ul>
         </div>
 
 
       </div>
-    </div>
 
     <!-- Sidebar Bottom User Profile Card -->
     <div class="admin-sidebar-footer">
@@ -192,6 +203,11 @@ require_once __DIR__ . '/admin_icons.php';
           <span class="admin-pulse-dot"></span>
           <span>System Healthy</span>
         </div>
+
+        <a href="/" target="_blank" class="admin-btn admin-btn-glass admin-btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; font-weight: 600;" title="Open Public Website in New Tab">
+          <?= admin_icon('external-link', '', 14) ?>
+          <span>View Public Site</span>
+        </a>
 
         <?php if (!empty($adminHeaderActionHtml)): ?>
           <div class="admin-top-actions">

@@ -18,8 +18,7 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($pageTitle) ?></title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
-  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<?= file_exists(__DIR__ . '/../../public/css/admin.css') ? filemtime(__DIR__ . '/../../public/css/admin.css') : '2.1' ?>">
   <style>
     body {
       background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 70%, #090d16 100%);
@@ -71,6 +70,8 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
   <div id="loginAlert" style="display: none; padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.825rem; font-weight: 700;"></div>
 
   <form id="adminLoginForm">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+
     <div class="admin-form-group">
       <label for="identity" class="admin-form-label">Operator Email or Username</label>
       <input 
@@ -78,10 +79,9 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
         id="identity" 
         name="identity" 
         class="admin-form-control" 
-        placeholder="admin@jobrecruitai.com" 
+        placeholder="Enter operator email or username" 
         required 
         autocomplete="username"
-        value="admin@jobrecruitai.com"
       >
     </div>
 
@@ -96,7 +96,6 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
           placeholder="••••••••••••" 
           required 
           autocomplete="current-password"
-          value="Admin@123"
           style="padding-right: 2.75rem;"
         >
         <button 
@@ -105,7 +104,8 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
           style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted);"
           title="Toggle Password Visibility"
         >
-          </button>
+          👁️
+        </button>
       </div>
     </div>
 
@@ -122,17 +122,9 @@ $pageTitle = "Admin Authentication — Government Recruitment Intelligence Platf
   </form>
 
   <div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-light); text-align: center;">
-    <p style="font-size: 0.775rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-      Quick System Operator Credentials:
-    </p>
-    <div style="display: inline-block; background: var(--admin-surface-subtle); padding: 0.25rem 0.75rem; border-radius: var(--radius-xs); font-size: 0.75rem; color: var(--text-dark); font-family: var(--font-mono); font-weight: 600;">
-      admin@jobrecruitai.com / Admin@123
-    </div>
-    <div style="margin-top: 1.25rem;">
-      <a href="/" style="font-size: 0.825rem; color: var(--primary-ruby); font-weight: 700;">
-        &larr; Return to Public Portal
-      </a>
-    </div>
+    <a href="/" style="font-size: 0.825rem; color: var(--primary-ruby); font-weight: 700;">
+      &larr; Return to Public Portal
+    </a>
   </div>
 </div>
 
@@ -148,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleBtn.addEventListener('click', () => {
       const isPwd = pwdInput.type === 'password';
       pwdInput.type = isPwd ? 'text' : 'password';
-      toggleBtn.innerText = isPwd ? '🔒' : '';
+      toggleBtn.innerText = isPwd ? '🔒' : '👁️';
     });
   }
 

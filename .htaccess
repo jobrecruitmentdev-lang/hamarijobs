@@ -1,0 +1,51 @@
+# ==============================================================================
+# HAMARIJOBS UNIVERSAL PRODUCTION ROOT RULES (HOSTINGER PUBLIC_HTML)
+# ==============================================================================
+
+# Disable directory browsing
+Options -Indexes -MultiViews
+
+# Block access to hidden files, dotfiles, source files, and configs
+<FilesMatch "^\.|\.(env|sql|bak|log|ini|yaml|yml|json|md|sh|py|lock|bat)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # 1. Protect internal server folders from direct HTTP browsing
+    RewriteRule ^(backend/app|database|storage|automation|tests|\.git|\.gemini) - [F,L]
+
+    # 2. Allow direct access to physical files if inside backend/public or frontend/public
+    RewriteCond %{REQUEST_URI} ^/backend/public/
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 3. Direct route for static assets requested from root (e.g. /css/..., /js/..., /assets/...)
+    RewriteCond %{DOCUMENT_ROOT}/frontend/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ frontend/public/$1 [L]
+
+    RewriteCond %{DOCUMENT_ROOT}/backend/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ backend/public/$1 [L]
+
+    # 4. Route all application requests to backend/public/index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ backend/public/index.php [L,QSA]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

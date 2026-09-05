@@ -50,7 +50,7 @@ require_once __DIR__ . '/partials/header.php';
 
   <!-- Search & Filter Bar -->
   <div class="filter-panel">
-    <form method="GET" action="/articles" class="filter-grid" style="grid-template-columns: 2fr 1fr auto;">
+    <form method="GET" action="/articles" class="filter-grid-3">
       <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Search guides by keyword, exam, topic..." class="form-control">
       
       <select name="type" class="form-control">
@@ -63,9 +63,9 @@ require_once __DIR__ . '/partials/header.php';
       </select>
 
       <div style="display: flex; gap: 0.5rem;">
-        <button type="submit" class="btn btn-primary">Filter Guides</button>
+        <button type="submit" class="btn btn-primary" style="flex: 1;"><?= app_icon('search', '', 14) ?> Filter</button>
         <?php if (!empty($search) || !empty($type)): ?>
-          <a href="/articles" class="btn btn-glass">Reset</a>
+          <a href="/articles" class="btn btn-glass" title="Reset Filters">✕</a>
         <?php endif; ?>
       </div>
     </form>
@@ -80,7 +80,7 @@ require_once __DIR__ . '/partials/header.php';
       <a href="/articles" class="btn btn-primary" style="margin-top: 1.5rem;">Reset Filter</a>
     </div>
   <?php else: ?>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.75rem;">
+    <div class="job-grid">
       <?php foreach ($articles as $art): ?>
         <div class="job-card">
           <div>

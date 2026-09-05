@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS `recruitment_events` (
         'OTHER'
     ) NOT NULL,
     `event_title` VARCHAR(255) NOT NULL,
+    `status` VARCHAR(50) NOT NULL DEFAULT 'RELEASED',
     `event_date` DATE NULL,
     `event_datetime` DATETIME NULL,
     `is_tentative` BOOLEAN DEFAULT FALSE,

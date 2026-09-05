@@ -119,6 +119,9 @@ require_once __DIR__ . '/partials/header.php';
         <p style="color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem;">
           <?= htmlspecialchars($exam['selection_stages_summary'] ?: 'Preliminary Examination (Tier-1 CBT) -> Main Examination (Tier-2 CBT) -> Skill / Typing Test -> Document Verification.') ?>
         </p>
+        <div style="margin-top: 1rem; padding: 0.85rem 1.25rem; background: var(--bg-surface-elevated); border-left: 3px solid var(--primary-red); border-radius: var(--radius-xs); font-size: 0.9rem; color: var(--text-secondary);">
+          Candidates can access verified syllabus weightages and mock blueprints on the <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;"><?= htmlspecialchars($exam['name']) ?> Portal</a>.
+        </div>
       </div>
     </div>
   </div>
@@ -130,59 +133,62 @@ require_once __DIR__ . '/partials/header.php';
         Official Examination Scheme & Test Structure
       </h3>
       
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Subject / Test Section</th>
-            <th>No. of Questions</th>
-            <th>Maximum Marks</th>
-            <th>Duration</th>
-            <th>Negative Marking</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (empty($patterns)): ?>
+      <div class="table-scroll-wrapper">
+        <div class="table-scroll-hint">Swipe sideways to view full pattern &rarr;</div>
+        <table class="data-table">
+          <thead>
             <tr>
-              <td>General Intelligence & Reasoning</td>
-              <td>25 Questions</td>
-              <td>50 Marks</td>
-              <td>60 Minutes (Combined)</td>
-              <td>0.50 Marks</td>
+              <th>Subject / Test Section</th>
+              <th>No. of Questions</th>
+              <th>Maximum Marks</th>
+              <th>Duration</th>
+              <th>Negative Marking</th>
             </tr>
-            <tr>
-              <td>General Awareness & Current Affairs</td>
-              <td>25 Questions</td>
-              <td>50 Marks</td>
-              <td>60 Minutes (Combined)</td>
-              <td>0.50 Marks</td>
-            </tr>
-            <tr>
-              <td>Quantitative Aptitude / Mathematics</td>
-              <td>25 Questions</td>
-              <td>50 Marks</td>
-              <td>60 Minutes (Combined)</td>
-              <td>0.50 Marks</td>
-            </tr>
-            <tr>
-              <td>English Comprehension</td>
-              <td>25 Questions</td>
-              <td>50 Marks</td>
-              <td>60 Minutes (Combined)</td>
-              <td>0.50 Marks</td>
-            </tr>
-          <?php else: ?>
-            <?php foreach ($patterns as $p): ?>
+          </thead>
+          <tbody>
+            <?php if (empty($patterns)): ?>
               <tr>
-                <td><strong><?= htmlspecialchars($p['subject_name']) ?></strong></td>
-                <td><?= $p['num_questions'] ?> Questions</td>
-                <td style="font-weight: 700; color: var(--primary-red);"><?= $p['max_marks'] ?> Marks</td>
-                <td><?= $p['duration_minutes'] ?> Mins</td>
-                <td><?= htmlspecialchars($p['negative_marking']) ?></td>
+                <td>General Intelligence & Reasoning</td>
+                <td>25 Questions</td>
+                <td>50 Marks</td>
+                <td>60 Minutes (Combined)</td>
+                <td>0.50 Marks</td>
               </tr>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </tbody>
-      </table>
+              <tr>
+                <td>General Awareness & Current Affairs</td>
+                <td>25 Questions</td>
+                <td>50 Marks</td>
+                <td>60 Minutes (Combined)</td>
+                <td>0.50 Marks</td>
+              </tr>
+              <tr>
+                <td>Quantitative Aptitude / Mathematics</td>
+                <td>25 Questions</td>
+                <td>50 Marks</td>
+                <td>60 Minutes (Combined)</td>
+                <td>0.50 Marks</td>
+              </tr>
+              <tr>
+                <td>English Comprehension</td>
+                <td>25 Questions</td>
+                <td>50 Marks</td>
+                <td>60 Minutes (Combined)</td>
+                <td>0.50 Marks</td>
+              </tr>
+            <?php else: ?>
+              <?php foreach ($patterns as $p): ?>
+                <tr>
+                  <td><strong><?= htmlspecialchars($p['subject_name']) ?></strong></td>
+                  <td><?= $p['num_questions'] ?> Questions</td>
+                  <td style="font-weight: 700; color: var(--primary-red);"><?= $p['max_marks'] ?> Marks</td>
+                  <td><?= $p['duration_minutes'] ?> Mins</td>
+                  <td><?= htmlspecialchars($p['negative_marking']) ?></td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -193,53 +199,56 @@ require_once __DIR__ . '/partials/header.php';
         Section-Wise Syllabus Breakdown & Topic Weightage
       </h3>
 
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Subject Area</th>
-            <th>Topic Name</th>
-            <th>Weightage</th>
-            <th>Difficulty Tier</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (empty($syllabus)): ?>
+      <div class="table-scroll-wrapper">
+        <div class="table-scroll-hint">Swipe sideways to view full weightages &rarr;</div>
+        <table class="data-table">
+          <thead>
             <tr>
-              <td>Quantitative Aptitude</td>
-              <td>Arithmetic (Percentage, Profit & Loss, SI/CI)</td>
-              <td><span style="font-weight: 700; color: var(--primary-red);">35%</span></td>
-              <td><span class="badge-org" style="font-size: 0.7rem;">Moderate</span></td>
+              <th>Subject Area</th>
+              <th>Topic Name</th>
+              <th>Weightage</th>
+              <th>Difficulty Tier</th>
             </tr>
-            <tr>
-              <td>Quantitative Aptitude</td>
-              <td>Advanced Math (Algebra, Geometry, Trigonometry)</td>
-              <td><span style="font-weight: 700; color: var(--primary-red);">25%</span></td>
-              <td><span class="badge-urgent" style="font-size: 0.7rem;">Hard</span></td>
-            </tr>
-            <tr>
-              <td>General Intelligence</td>
-              <td>Analogy, Coding-Decoding, Non-Verbal</td>
-              <td><span style="font-weight: 700; color: var(--primary-red);">40%</span></td>
-              <td><span class="badge-active" style="font-size: 0.7rem;">Easy</span></td>
-            </tr>
-          <?php else: ?>
-            <?php foreach ($syllabus as $s): ?>
+          </thead>
+          <tbody>
+            <?php if (empty($syllabus)): ?>
               <tr>
-                <td><strong><?= htmlspecialchars($s['subject']) ?></strong></td>
-                <td><?= htmlspecialchars($s['topic']) ?></td>
-                <td>
-                  <span style="font-weight: 700; color: var(--primary-red);">
-                    <?= $s['weightage_percentage'] ? number_format($s['weightage_percentage'], 1) . '%' : 'N/A' ?>
-                  </span>
-                </td>
-                <td>
-                  <span class="badge-org" style="font-size: 0.7rem;"><?= htmlspecialchars($s['difficulty_tier']) ?></span>
-                </td>
+                <td>Quantitative Aptitude</td>
+                <td>Arithmetic (Percentage, Profit & Loss, SI/CI)</td>
+                <td><span style="font-weight: 700; color: var(--primary-red);">35%</span></td>
+                <td><span class="badge-org" style="font-size: 0.7rem;">Moderate</span></td>
               </tr>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </tbody>
-      </table>
+              <tr>
+                <td>Quantitative Aptitude</td>
+                <td>Advanced Math (Algebra, Geometry, Trigonometry)</td>
+                <td><span style="font-weight: 700; color: var(--primary-red);">25%</span></td>
+                <td><span class="badge-urgent" style="font-size: 0.7rem;">Hard</span></td>
+              </tr>
+              <tr>
+                <td>General Intelligence</td>
+                <td>Analogy, Coding-Decoding, Non-Verbal</td>
+                <td><span style="font-weight: 700; color: var(--primary-red);">40%</span></td>
+                <td><span class="badge-active" style="font-size: 0.7rem;">Easy</span></td>
+              </tr>
+            <?php else: ?>
+              <?php foreach ($syllabus as $s): ?>
+                <tr>
+                  <td><strong><?= htmlspecialchars($s['subject']) ?></strong></td>
+                  <td><?= htmlspecialchars($s['topic']) ?></td>
+                  <td>
+                    <span style="font-weight: 700; color: var(--primary-red);">
+                      <?= $s['weightage_percentage'] ? number_format($s['weightage_percentage'], 1) . '%' : 'N/A' ?>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge-org" style="font-size: 0.7rem;"><?= htmlspecialchars($s['difficulty_tier']) ?></span>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -250,36 +259,39 @@ require_once __DIR__ . '/partials/header.php';
         Previous Year Cutoff Benchmarks & Trends
       </h3>
 
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Year</th>
-            <th>Category</th>
-            <th>Cutoff Marks</th>
-            <th>Total Marks</th>
-            <th>Qualifying Benchmark</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (empty($cutoffs)): ?>
-            <tr><td>2025</td><td>UR (Unreserved)</td><td style="font-weight: 700; color: var(--primary-red);">150.04</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
-            <tr><td>2025</td><td>OBC</td><td style="font-weight: 700; color: var(--primary-red);">145.32</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
-            <tr><td>2025</td><td>EWS</td><td style="font-weight: 700; color: var(--primary-red);">143.44</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
-            <tr><td>2025</td><td>SC</td><td style="font-weight: 700; color: var(--primary-red);">126.68</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
-            <tr><td>2025</td><td>ST</td><td style="font-weight: 700; color: var(--primary-red);">118.16</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
-          <?php else: ?>
-            <?php foreach ($cutoffs as $c): ?>
-              <tr>
-                <td><strong><?= $c['year'] ?></strong></td>
-                <td><span class="badge-org" style="font-size: 0.7rem;"><?= htmlspecialchars($c['category']) ?></span></td>
-                <td style="font-weight: 800; color: var(--primary-red);"><?= number_format($c['cutoff_marks'], 2) ?></td>
-                <td><?= number_format($c['total_marks'], 2) ?></td>
-                <td><span class="badge-active">Verified Official</span></td>
-              </tr>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </tbody>
-      </table>
+      <div class="table-scroll-wrapper">
+        <div class="table-scroll-hint">Swipe sideways to view full cutoffs &rarr;</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Category</th>
+              <th>Cutoff Marks</th>
+              <th>Total Marks</th>
+              <th>Qualifying Benchmark</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (empty($cutoffs)): ?>
+              <tr><td>2025</td><td>UR (Unreserved)</td><td style="font-weight: 700; color: var(--primary-red);">150.04</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
+              <tr><td>2025</td><td>OBC</td><td style="font-weight: 700; color: var(--primary-red);">145.32</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
+              <tr><td>2025</td><td>EWS</td><td style="font-weight: 700; color: var(--primary-red);">143.44</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
+              <tr><td>2025</td><td>SC</td><td style="font-weight: 700; color: var(--primary-red);">126.68</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
+              <tr><td>2025</td><td>ST</td><td style="font-weight: 700; color: var(--primary-red);">118.16</td><td>200.00</td><td><span class="badge-active">Verified Official</span></td></tr>
+            <?php else: ?>
+              <?php foreach ($cutoffs as $c): ?>
+                <tr>
+                  <td><strong><?= $c['year'] ?></strong></td>
+                  <td><span class="badge-org" style="font-size: 0.7rem;"><?= htmlspecialchars($c['category']) ?></span></td>
+                  <td style="font-weight: 800; color: var(--primary-red);"><?= number_format($c['cutoff_marks'], 2) ?></td>
+                  <td><?= number_format($c['total_marks'], 2) ?></td>
+                  <td><span class="badge-active">Verified Official</span></td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -291,6 +303,9 @@ require_once __DIR__ . '/partials/header.php';
       </h3>
       <div style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8;">
         <?= nl2br(htmlspecialchars($exam['preparation_strategy'] ?: "1. Build strong conceptual foundation from NCERT and standard reference manuals.\n2. Dedicate 2 hours daily to speed calculation and arithmetic shortcut practice.\n3. Solve previous 5 years question papers to master negative marking avoidance.\n4. Take full-length timed mock tests weekly and review wrong questions.")) ?>
+      </div>
+      <div style="margin-top: 1.5rem; padding: 1rem 1.25rem; background: rgba(220, 38, 38, 0.04); border: 1px solid rgba(220, 38, 38, 0.15); border-left: 4px solid var(--primary-red); border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--text-secondary);">
+        <strong style="color: var(--primary-red-dark);">🎯 National Test Benchmarking & Cutoffs:</strong> To compare category-wise qualifying thresholds and multi-year cutoff trends, candidates can refer to the <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Government Job Recruitment</a> analytical database.
       </div>
     </div>
   </div>

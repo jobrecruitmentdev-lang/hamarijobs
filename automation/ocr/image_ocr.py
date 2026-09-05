@@ -17,6 +17,7 @@ class ImageOCR:
         self._tesseract_available = None
         self._rapidocr_available = None
         self.rapid_ocr = None
+        self._init_engines()
         
     def _init_engines(self):
         if self._tesseract_available is not None:

@@ -23,19 +23,36 @@ class LLMExtractor:
     """
     
     SYSTEM_PROMPT = """You are an elite Government Recruitment Information Verification and Extraction Engine.
-Your task is to extract structured, 100% verified factual data from official government recruitment notifications.
-
-STRICT FACTUAL GROUNDING RULES:
-1. NEVER INVENT OR HALLUCINATE ANY FACT.
-2. If any data point (dates, vacancies, salary, fee, age limit) is not explicitly present in the provided text, leave it as null, empty list, or empty object.
-3. Every critical fact must be verified from the text with a short verbatim evidence snippet.
-4. Distinguish between standard notifications, corrigendums, admit cards, answer keys, and results.
-5. Return ONLY a valid, parseable JSON object matching the requested schema. No markdown wrapping or extra commentary."""
+Extract verified factual data from the government recruitment text and return a STRICT JSON object with this exact structure:
+{
+  "title": "Exact official examination or post recruitment title",
+  "organization": "Conducting commission or board name (e.g. UPSC, SSC, RRB, IBPS)",
+  "advertisement_number": "Official notification / advertisement number",
+  "total_vacancies": 1000,
+  "educational_qualification": "Minimum educational qualification required",
+  "salary": {"pay_scale_text": "Pay Level / Scale text"},
+  "age_limit": {"min_age": 18, "max_age": 32},
+  "important_dates": {
+    "application_start_date": "DD-MM-YYYY",
+    "application_last_date": "DD-MM-YYYY",
+    "exam_date": "DD-MM-YYYY (only if a specific confirmed date is given in notice, otherwise null)",
+    "tentative_exam_window": "Tentative month or range if mentioned (e.g. September-October 2026), else null",
+    "is_exam_date_announced": false
+  },
+  "official_apply_url": "https://...",
+  "selection_process": ["Preliminary Exam", "Main Exam", "Interview"]
+}
+STRICT RULES:
+1. Return ONLY valid, parseable JSON matching this schema. No markdown wrapping or commentary.
+2. If any date or field is not explicitly stated in the notice, set it to null. NEVER hallucinate or invent dummy dates.
+3. Admit cards and results for future examinations are NOT released at the time of recruitment notification; do not invent release dates for them."""
 
     def __init__(self):
         self.gemini_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
         self.openai_key = settings.OPENAI_API_KEY or os.getenv("OPENAI_API_KEY")
         self.groq_key = os.getenv("GROQ_API_KEY")
+        self._gemini_exhausted = False
+        self._openai_exhausted = False
         
     def extract_structured_recruitment(self, raw_text: str, source_meta: Optional[Dict[str, Any]] = None) -> StructuredRecruitmentExtraction:
         """
@@ -45,12 +62,12 @@ STRICT FACTUAL GROUNDING RULES:
         source_meta = source_meta or {}
         extracted_data = None
         
-        # 1. Try Gemini if configured
-        if self.gemini_key:
+        # 1. Try Gemini if configured and available
+        if self.gemini_key and not self._gemini_exhausted:
             extracted_data = self._call_gemini(raw_text, source_meta)
             
-        # 2. Try OpenAI if configured
-        if not extracted_data and self.openai_key:
+        # 2. Try OpenAI if configured and available
+        if not extracted_data and self.openai_key and not self._openai_exhausted:
             extracted_data = self._call_openai(raw_text, source_meta)
             
         # 3. Try Groq if configured
@@ -64,29 +81,152 @@ STRICT FACTUAL GROUNDING RULES:
             
         return extracted_data
 
+    def _normalize_data(self, data: Dict[str, Any], meta: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(data, dict):
+            data = {}
+
+        # Total Vacancies
+        tv = data.get("total_vacancies")
+        if isinstance(tv, dict):
+            tv = tv.get("value") or tv.get("count") or tv.get("total")
+        if isinstance(tv, str):
+            digits = re.sub(r'[^\d]', '', tv)
+            data["total_vacancies"] = int(digits) if digits else None
+        elif isinstance(tv, (int, float)):
+            data["total_vacancies"] = int(tv)
+        else:
+            data["total_vacancies"] = None
+
+        # Age Limit
+        al = data.get("age_limit")
+        if not isinstance(al, dict):
+            data["age_limit"] = {}
+
+        # Salary
+        sal = data.get("salary")
+        if not isinstance(sal, dict):
+            data["salary"] = {"pay_scale_text": str(sal) if sal else None}
+
+        # Application Fee
+        fee = data.get("application_fee")
+        if not isinstance(fee, dict):
+            data["application_fee"] = {}
+
+        # Important Dates
+        dates = data.get("important_dates")
+        if isinstance(dates, list):
+            d_dict = {}
+            for item in dates:
+                if isinstance(item, dict):
+                    t = str(item.get("type") or item.get("event") or "").lower()
+                    val = item.get("date") or item.get("value")
+                    if "last" in t or "close" in t or "end" in t:
+                        d_dict["application_last_date"] = val
+                    elif "start" in t or "open" in t or "begin" in t:
+                        d_dict["application_start_date"] = val
+                    elif "exam" in t:
+                        d_dict["exam_date"] = val
+                    elif "admit" in t:
+                        d_dict["admit_card_date"] = val
+                    elif "result" in t:
+                        d_dict["result_date"] = val
+            data["important_dates"] = d_dict
+        elif not isinstance(dates, dict):
+            data["important_dates"] = {}
+
+        # Selection Process
+        if not isinstance(data.get("selection_process"), list):
+            data["selection_process"] = []
+
+        # Classification
+        valid_classes = ["JOB", "RECRUITMENT", "EXAM", "ADMIT_CARD", "ANSWER_KEY", "RESULT", "CUTOFF", "CORRIGENDUM", "SYLLABUS", "NOTICE", "IRRELEVANT"]
+        c = str(data.get("classification", "")).upper()
+        data["classification"] = c if c in valid_classes else "JOB"
+
+        # Defaults from meta
+        if not data.get("title"):
+            data["title"] = (
+                data.get("recruitment_title")
+                or data.get("examination_title")
+                or data.get("exam_title")
+                or data.get("document_title")
+                or meta.get("title")
+                or "Government Recruitment Notification"
+            )
+        if not data.get("organization"):
+            data["organization"] = meta.get("organization") or meta.get("source_name") or "Government of India"
+        if not data.get("year"):
+            data["year"] = 2026
+        if not data.get("official_notification_url"):
+            data["official_notification_url"] = meta.get("url")
+        if not data.get("official_source_domain"):
+            data["official_source_domain"] = meta.get("domain")
+
+        return data
+
     def _call_gemini(self, raw_text: str, source_meta: Dict[str, Any]) -> Optional[StructuredRecruitmentExtraction]:
+        model_name = settings.DEFAULT_LLM_MODEL or "gemini-2.5-flash"
+        
+        # 1. Direct REST API Call (Fast, Zero SDK friction, guaranteed v1beta compatibility)
+        try:
+            import urllib.request
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.gemini_key}"
+            prompt = f"{self.SYSTEM_PROMPT}\n\nSource Metadata: {json.dumps(source_meta)}\n\nDocument Text:\n{raw_text[:35000]}"
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "responseMimeType": "application/json",
+                    "temperature": 0.0,
+                    "maxOutputTokens": 2048
+                }
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                result_json = json.loads(resp.read().decode("utf-8"))
+                candidate_text = result_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+                if candidate_text.startswith("```"):
+                    candidate_text = re.sub(r'^```(?:json)?\s*', '', candidate_text)
+                    candidate_text = re.sub(r'\s*```$', '', candidate_text)
+                data = json.loads(candidate_text)
+                norm = self._normalize_data(data, source_meta)
+                return StructuredRecruitmentExtraction(**norm)
+        except Exception as rest_err:
+            logger.warning(f"[LLMExtractor] Direct Gemini REST call notice ({rest_err}), trying SDK...")
+
+        # 2. Fallback to SDK
         try:
             import google.generativeai as genai
             genai.configure(api_key=self.gemini_key)
             model = genai.GenerativeModel(
-                model_name=settings.FALLBACK_LLM_MODEL,
+                model_name=model_name,
                 generation_config={"response_mime_type": "application/json", "temperature": 0.0}
             )
-            prompt = f"{self.SYSTEM_PROMPT}\n\nSource Metadata: {json.dumps(source_meta)}\n\nDocument Text:\n{raw_text[:25000]}"
+            prompt = f"{self.SYSTEM_PROMPT}\n\nSource Metadata: {json.dumps(source_meta)}\n\nDocument Text:\n{raw_text[:30000]}"
             response = model.generate_content(prompt)
             data = json.loads(response.text)
-            return StructuredRecruitmentExtraction(**data)
+            norm = self._normalize_data(data, source_meta)
+            return StructuredRecruitmentExtraction(**norm)
         except Exception as e:
-            logger.error(f"[LLMExtractor] Gemini extraction error: {e}")
+            err_str = str(e)
+            if "429" in err_str or "Quota exceeded" in err_str or "quota" in err_str.lower():
+                self._gemini_exhausted = True
+                logger.warning("[LLMExtractor] Gemini quota limit (429) hit. Fast-falling back to backup/deterministic engine.")
+            else:
+                logger.error(f"[LLMExtractor] Gemini extraction error: {e}")
             return None
 
     def _call_openai(self, raw_text: str, source_meta: Dict[str, Any]) -> Optional[StructuredRecruitmentExtraction]:
+        model_name = settings.FALLBACK_LLM_MODEL or "gpt-4o-mini"
         try:
             from openai import OpenAI
-            client = OpenAI(api_key=self.openai_key)
+            client = OpenAI(api_key=self.openai_key, timeout=5.0, max_retries=0)
             prompt = f"Source Metadata: {json.dumps(source_meta)}\n\nDocument Text:\n{raw_text[:25000]}"
             response = client.chat.completions.create(
-                model=settings.DEFAULT_LLM_MODEL,
+                model=model_name,
                 messages=[
                     {"role": "system", "content": self.SYSTEM_PROMPT},
                     {"role": "user", "content": prompt}
@@ -95,9 +235,15 @@ STRICT FACTUAL GROUNDING RULES:
                 response_format={"type": "json_object"}
             )
             data = json.loads(response.choices[0].message.content)
-            return StructuredRecruitmentExtraction(**data)
+            norm = self._normalize_data(data, source_meta)
+            return StructuredRecruitmentExtraction(**norm)
         except Exception as e:
-            logger.error(f"[LLMExtractor] OpenAI extraction error: {e}")
+            err_str = str(e)
+            if "429" in err_str or "insufficient_quota" in err_str or "credit_balance_exhausted" in err_str:
+                self._openai_exhausted = True
+                logger.warning("[LLMExtractor] OpenAI credit/quota exhausted. Fast-falling back to deterministic engine.")
+            else:
+                logger.error(f"[LLMExtractor] OpenAI extraction error: {e}")
             return None
 
     def _call_groq(self, raw_text: str, source_meta: Dict[str, Any]) -> Optional[StructuredRecruitmentExtraction]:
@@ -131,9 +277,12 @@ STRICT FACTUAL GROUNDING RULES:
         # 1. Total Vacancies detection
         vacancies = None
         vac_patterns = [
-            r"(?:total\s+vacanc(?:ies|y)|tentative\s+vacancies|no\.\s+of\s+posts|vacancies|number\s+of\s+vacancies(?:\s+to\s+be\s+filled)?(?:\s+is)?(?:\s+expected\s+to\s+be)?(?:\s+approximately)?)\s*[:=-]?\s*([0-9,]{1,8})",
-            r"([0-9,]{1,7})\s+vacancies",
-            r"approximately\s+([0-9,]{1,7})"
+            r"(?:total\s+(?:regular\s+)?vacanc(?:ies|y)|tentative\s+vacancies|no\.\s+of\s+posts|vacancies|number\s+of\s+vacancies(?:\s+to\s+be\s+filled)?(?:\s+is)?(?:\s+expected\s+to\s+be)?(?:\s+approximately)?)\s*[:=-]?\s*([0-9,]{1,8})",
+            r"(?:total\s+)?([0-9,]{1,7})\s+(?:regular\s+)?vacancies",
+            r"approximately\s+([0-9,]{1,7})",
+            r"about\s+([0-9,]{1,7})\s+posts",
+            r"total\s+([0-9,]{1,7})\s+posts",
+            r"regular:\s*([0-9,]{1,7})\s+posts"
         ]
         for pat in vac_patterns:
             vac_match = re.search(pat, text, re.IGNORECASE)

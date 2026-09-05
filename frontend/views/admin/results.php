@@ -29,7 +29,8 @@ $examsList = $db->query("SELECT id, name, short_name, conducting_body FROM exams
 $pageTitle = "Manage Results & Cutoffs — Admin Control Center";
 $adminPageTitle = "Results & Cutoffs";
 $adminPageHeading = "Recruitment Results, Selection Merit Lists & Official Cutoffs Intelligence";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addResultModal\')" class="admin-btn admin-btn-primary admin-btn-sm" style="margin-right: 0.5rem;">+ Create Result Notice</button><button onclick="openModal(\'addCutoffModal\')" class="admin-btn admin-btn-glass admin-btn-sm">Add Cutoff Score</button>';
+require_once __DIR__ . '/partials/admin_icons.php';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addResultModal\')" class="admin-btn admin-btn-primary admin-btn-sm" style="margin-right: 0.5rem;">' . admin_icon('plus', '', 14) . ' Create Result Notice</button><button onclick="openModal(\'addCutoffModal\')" class="admin-btn admin-btn-glass admin-btn-sm">' . admin_icon('plus', '', 14) . ' Add Cutoff Score</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -39,7 +40,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Declared Results</span>
-      <div class="admin-kpi-icon ruby"></div>
+      <div class="admin-kpi-icon ruby"><?= admin_icon('award', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--primary-ruby);"><?= number_format(count(array_filter($results, fn($r) => $r['event_type'] === 'RESULT_DECLARED'))) ?></div>
     <div class="admin-kpi-subtext">
@@ -50,7 +51,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Final Merit Lists</span>
-      <div class="admin-kpi-icon emerald">📜</div>
+      <div class="admin-kpi-icon emerald"><?= admin_icon('scroll', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-emerald);"><?= number_format(count(array_filter($results, fn($r) => $r['event_type'] === 'FINAL_MERIT_LIST'))) ?></div>
     <div class="admin-kpi-subtext">
@@ -61,7 +62,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Official Cutoff Records</span>
-      <div class="admin-kpi-icon blue"></div>
+      <div class="admin-kpi-icon blue"><?= admin_icon('bar-chart', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-blue);"><?= number_format(count($cutoffs)) ?></div>
     <div class="admin-kpi-subtext">
@@ -74,11 +75,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card" style="margin-bottom: 2rem;">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">Published Exam Results & Scorecard Notices</h3>
+      <h3 class="admin-card-title"><?= admin_icon('award', '', 18) ?> Published Exam Results & Scorecard Notices</h3>
       <p class="admin-card-desc">Showing <strong><?= count($results) ?></strong> official merit lists and selection notices</p>
     </div>
     <button onclick="openModal('addResultModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      + Create Result Notice
+      <?= admin_icon('plus', '', 14) ?> Create Result Notice
     </button>
   </div>
 
@@ -90,6 +91,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <th>Result Title / Notification</th>
           <th>Organization / Recruitment</th>
           <th>Event Type</th>
+          <th style="min-width: 170px;">Live Status</th>
           <th>Declaration Date</th>
           <th>Scorecard Link</th>
           <th style="text-align: right;">Actions</th>
@@ -98,7 +100,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
       <tbody id="resultsTableBody">
         <?php if (empty($results)): ?>
           <tr id="emptyResultRow">
-            <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <td colspan="8" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
               <div style="font-size: 2rem; margin-bottom: 0.5rem;"></div>
               <strong>No results declared yet.</strong>
               <p style="font-size: 0.8rem; margin-top: 0.35rem;">Click "Create Result Notice" above to announce an official examination result.</p>
@@ -143,12 +145,22 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
                     $label = 'Cutoff Score';
                 } elseif ($res['event_type'] === 'ANSWER_KEY_RELEASED') {
                     $badgeClass = 'badge-urgent';
-                    $label = '🔑 Answer Key';
+                    $label = 'Answer Key';
                 }
               ?>
               <span class="admin-badge <?= $badgeClass ?>" style="font-size: 0.72rem;">
                 <?= $label ?>
               </span>
+            </td>
+            <td>
+              <?php $curStatus = $res['status'] ?? 'RELEASED'; ?>
+              <select class="admin-form-control result-status-select" data-event-id="<?= $res['id'] ?>" style="font-size: 0.775rem; padding: 0.35rem 0.5rem; font-weight: 700; border-radius: 6px;">
+                <option value="RELEASED" <?= ($curStatus === 'RELEASED' || $curStatus === 'DECLARED') ? 'selected' : '' ?>>🎉 Result Declared</option>
+                <option value="PROVISIONAL_KEY" <?= $curStatus === 'PROVISIONAL_KEY' ? 'selected' : '' ?>>🔑 Provisional Key</option>
+                <option value="FINAL_LIST" <?= $curStatus === 'FINAL_LIST' ? 'selected' : '' ?>>📜 Final Merit List</option>
+                <option value="EXPECTED" <?= $curStatus === 'EXPECTED' ? 'selected' : '' ?>>⏳ Expected Soon</option>
+                <option value="POSTPONED" <?= $curStatus === 'POSTPONED' ? 'selected' : '' ?>>⚠️ Withheld / Delayed</option>
+              </select>
             </td>
             <td>
               <div style="font-weight: 700; color: var(--primary-ruby); font-size: 0.9rem;">
@@ -167,10 +179,10 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <button onclick="editResult(<?= $res['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Result Notice">
-                  
+                  <?= admin_icon('edit', '', 15) ?>
                 </button>
-                <button onclick="deleteResult(<?= $res['id'] ?>, '<?= htmlspecialchars(addslashes($res['event_title'])) ?>')" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Result">
-                  
+                <button onclick="deleteResult(<?= $res['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Result">
+                  <?= admin_icon('trash', '', 15) ?>
                 </button>
               </div>
             </td>
@@ -245,9 +257,14 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
               <?php endif; ?>
             </td>
             <td style="text-align: right;">
-              <button onclick="deleteCutoff(<?= $c['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Cutoff">
-                
-              </button>
+              <div class="admin-action-btn-group" style="justify-content: flex-end;">
+                <button onclick="editCutoff(<?= $c['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Cutoff Score">
+                  <?= admin_icon('edit', '', 15) ?>
+                </button>
+                <button onclick="deleteCutoff(<?= $c['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Cutoff">
+                  <?= admin_icon('trash', '', 15) ?>
+                </button>
+              </div>
             </td>
           </tr>
         <?php endforeach; ?>
@@ -260,7 +277,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addResultModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">+ Publish Official Result / Merit List</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('plus', '', 18) ?> Publish Official Result / Merit List</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addResultModal')">&times;</button>
     </div>
 
@@ -305,11 +322,22 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           </div>
         </div>
 
-        <div class="admin-form-section-title">3. DECLARATION DATE & DIRECT SCORECARD LINK</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="admin-form-section-title">3. DECLARATION DATE, STATUS & DIRECT SCORECARD LINK</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
           <div class="admin-form-group">
             <label class="admin-form-label">Declaration Date *</label>
             <input type="date" name="event_date" value="<?= date('Y-m-d') ?>" required class="admin-form-control">
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Live Status</label>
+            <select name="status" class="admin-form-control">
+              <option value="RELEASED">🎉 Result Declared</option>
+              <option value="PROVISIONAL_KEY">🔑 Provisional Key Out</option>
+              <option value="FINAL_LIST">📜 Final Merit List</option>
+              <option value="EXPECTED">⏳ Expected Soon</option>
+              <option value="POSTPONED">⚠️ Withheld / Delayed</option>
+            </select>
           </div>
 
           <div class="admin-form-group">
@@ -327,7 +355,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 
       <div class="admin-modal-footer">
         <button type="button" class="admin-btn admin-btn-glass" onclick="closeModal('addResultModal')">Cancel</button>
-        <button type="submit" id="saveResultBtn" class="admin-btn admin-btn-primary">💾 Publish Result Notice</button>
+        <button type="submit" id="saveResultBtn" class="admin-btn admin-btn-primary"><?= admin_icon('check', '', 14) ?> Publish Result Notice</button>
       </div>
     </form>
   </div>
@@ -337,7 +365,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editResultModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title"> Edit Result / Merit List Notice</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('edit', '', 18) ?> Edit Result / Merit List Notice</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editResultModal')">&times;</button>
     </div>
 
@@ -356,8 +384,8 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <div class="admin-form-group">
             <label class="admin-form-label">Notice Type *</label>
             <select name="event_type" id="edit_result_type" required class="admin-form-control">
-              <option value="RESULT_DECLARED">RESULT_DECLARED</option>
-              <option value="FINAL_MERIT_LIST">📜 FINAL_MERIT_LIST</option>
+              <option value="RESULT_DECLARED">Result Declared</option>
+              <option value="FINAL_MERIT_LIST">Final Merit List</option>
               <option value="CUTOFF_RELEASED">CUTOFF_RELEASED</option>
               <option value="ANSWER_KEY_RELEASED">🔑 ANSWER_KEY_RELEASED</option>
             </select>
@@ -384,11 +412,22 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           </div>
         </div>
 
-        <div class="admin-form-section-title">3. DATES & LINKS</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="admin-form-section-title">3. DATES, STATUS & LINKS</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
           <div class="admin-form-group">
             <label class="admin-form-label">Declaration Date</label>
             <input type="date" name="event_date" id="edit_result_date" required class="admin-form-control">
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Live Status</label>
+            <select name="status" id="edit_result_status" class="admin-form-control">
+              <option value="RELEASED">🎉 Result Declared</option>
+              <option value="PROVISIONAL_KEY">🔑 Provisional Key Out</option>
+              <option value="FINAL_LIST">📜 Final Merit List</option>
+              <option value="EXPECTED">⏳ Expected Soon</option>
+              <option value="POSTPONED">⚠️ Withheld / Delayed</option>
+            </select>
           </div>
 
           <div class="admin-form-group">
@@ -416,7 +455,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addCutoffModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">Add Official Cutoff Benchmark Score</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('plus', '', 18) ?> Add Official Cutoff Benchmark Score</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addCutoffModal')">&times;</button>
     </div>
 
@@ -483,7 +522,85 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 
       <div class="admin-modal-footer">
         <button type="button" class="admin-btn admin-btn-glass" onclick="closeModal('addCutoffModal')">Cancel</button>
-        <button type="submit" id="saveCutoffBtn" class="admin-btn admin-btn-primary">💾 Save Cutoff Score</button>
+        <button type="submit" id="saveCutoffBtn" class="admin-btn admin-btn-primary">Save Cutoff Score</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Cutoff Modal -->
+<div id="editCutoffModal" class="admin-modal-overlay">
+  <div class="admin-modal-card">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title"><?= admin_icon('edit', '', 18) ?> Edit Cutoff Benchmark Score</h3>
+      <button class="admin-modal-close-btn" onclick="closeModal('editCutoffModal')">&times;</button>
+    </div>
+
+    <form id="editCutoffForm">
+      <input type="hidden" name="id" id="edit_cutoff_id">
+      <div class="admin-modal-body">
+        
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 1rem;">
+          <div class="admin-form-group">
+            <label class="admin-form-label">Target Examination *</label>
+            <select name="exam_id" id="edit_cutoff_exam_id" required class="admin-form-control">
+              <option value="">-- Select Exam Hub --</option>
+              <?php foreach ($examsList as $ex): ?>
+                <option value="<?= $ex['id'] ?>">
+                  <?= htmlspecialchars($ex['short_name']) ?> — <?= htmlspecialchars($ex['name']) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Examination Year *</label>
+            <input type="number" name="year" id="edit_cutoff_year" required class="admin-form-control">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+          <div class="admin-form-group">
+            <label class="admin-form-label">Category *</label>
+            <select name="category" id="edit_cutoff_category" required class="admin-form-control">
+              <option value="UR">UR (Unreserved / General)</option>
+              <option value="OBC">OBC</option>
+              <option value="EWS">EWS</option>
+              <option value="SC">SC</option>
+              <option value="ST">ST</option>
+              <option value="PwD">PwD</option>
+              <option value="Ex-Servicemen">Ex-Servicemen</option>
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Cutoff Marks *</label>
+            <input type="number" step="0.01" name="cutoff_marks" id="edit_cutoff_marks" required class="admin-form-control">
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Total Out of Marks *</label>
+            <input type="number" step="0.01" name="total_marks" id="edit_cutoff_total_marks" required class="admin-form-control">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="admin-form-group">
+            <label class="admin-form-label">Qualifying Candidates Count</label>
+            <input type="number" name="qualifying_candidates" id="edit_cutoff_qualifying_candidates" class="admin-form-control">
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Official Notice PDF Link</label>
+            <input type="url" name="official_notice_url" id="edit_cutoff_official_notice_url" class="admin-form-control">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="admin-modal-footer">
+        <button type="button" class="admin-btn admin-btn-glass" onclick="closeModal('editCutoffModal')">Cancel</button>
+        <button type="submit" id="updateCutoffBtn" class="admin-btn admin-btn-primary">Update Cutoff Score</button>
       </div>
     </form>
   </div>
@@ -555,6 +672,7 @@ async function editResult(id) {
     document.getElementById('edit_result_id').value = ev.id;
     document.getElementById('edit_result_title').value = ev.event_title || '';
     document.getElementById('edit_result_type').value = ev.event_type || 'RESULT_DECLARED';
+    document.getElementById('edit_result_status').value = ev.status || 'RELEASED';
     document.getElementById('edit_result_rec_id').value = ev.recruitment_id || '';
     document.getElementById('edit_result_org_name').value = ev.organization_name || ev.rec_org_name || '';
     document.getElementById('edit_result_date').value = ev.event_date || '';
@@ -600,8 +718,8 @@ document.getElementById('editResultForm')?.addEventListener('submit', async func
 });
 
 // Delete Result
-async function deleteResult(id, title) {
-  if (!confirm(`Are you sure you want to delete "${title}"?`)) {
+async function deleteResult(id) {
+  if (!confirm(`Are you sure you want to delete Result Event #${id}? This action cannot be undone.`)) {
     return;
   }
 
@@ -615,13 +733,43 @@ async function deleteResult(id, title) {
 
     if (data.success) {
       const row = document.getElementById(`result-row-${id}`);
-      if (row) row.remove();
-      alert('✓ ' + data.message);
+      if (row) {
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 250);
+      }
+      alert(data.message || 'Result deleted successfully!');
     } else {
-      alert('❌ Error: ' + (data.error || 'Failed to delete result'));
+      alert('Error: ' + (data.error || 'Failed to delete result'));
     }
   } catch (err) {
-    alert('❌ Connection failed: ' + err.message);
+    alert('Connection failed: ' + err.message);
+  }
+}
+
+// Edit Cutoff Fetch & Populate
+async function editCutoff(id) {
+  try {
+    const res = await fetch(`/api/v1/admin/cutoffs/get?id=${id}`);
+    const data = await res.json();
+
+    if (!data.success || !data.data) {
+      alert('Could not load cutoff details.');
+      return;
+    }
+
+    const c = data.data;
+    document.getElementById('edit_cutoff_id').value = c.id;
+    document.getElementById('edit_cutoff_exam_id').value = c.exam_id;
+    document.getElementById('edit_cutoff_year').value = c.year;
+    document.getElementById('edit_cutoff_category').value = c.category;
+    document.getElementById('edit_cutoff_marks').value = c.cutoff_marks;
+    document.getElementById('edit_cutoff_total_marks').value = c.total_marks;
+    document.getElementById('edit_cutoff_qualifying_candidates').value = c.qualifying_candidates || '';
+    document.getElementById('edit_cutoff_official_notice_url').value = c.official_notice_url || '';
+
+    openModal('editCutoffModal');
+  } catch (err) {
+    alert('Error fetching details: ' + err.message);
   }
 }
 
@@ -644,22 +792,54 @@ document.getElementById('addCutoffForm')?.addEventListener('submit', async funct
     const data = await res.json();
 
     if (data.success) {
-      alert('✓ ' + data.message);
+      alert(data.message || 'Cutoff score added successfully!');
       window.location.reload();
     } else {
-      alert('❌ Error: ' + (data.error || 'Failed to add cutoff'));
+      alert('Error: ' + (data.error || 'Failed to add cutoff'));
     }
   } catch (err) {
-    alert('❌ Connection failed: ' + err.message);
+    alert('Connection failed: ' + err.message);
   } finally {
     btn.disabled = false;
-    btn.innerText = '💾 Save Cutoff Score';
+    btn.innerText = 'Save Cutoff Score';
+  }
+});
+
+// Update Cutoff Handler
+document.getElementById('editCutoffForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('updateCutoffBtn');
+  btn.disabled = true;
+  btn.innerText = 'Updating...';
+
+  const formData = new FormData(this);
+  const payload = Object.fromEntries(formData.entries());
+
+  try {
+    const res = await fetch('/api/v1/admin/cutoffs/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert(data.message || 'Cutoff score updated successfully!');
+      window.location.reload();
+    } else {
+      alert('Error: ' + (data.error || 'Failed to update cutoff'));
+    }
+  } catch (err) {
+    alert('Connection failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Update Cutoff Score';
   }
 });
 
 // Delete Cutoff
 async function deleteCutoff(id) {
-  if (!confirm('Are you sure you want to delete this cutoff record?')) {
+  if (!confirm(`Are you sure you want to delete Cutoff Record #${id}?`)) {
     return;
   }
 
@@ -673,15 +853,49 @@ async function deleteCutoff(id) {
 
     if (data.success) {
       const row = document.getElementById(`cutoff-row-${id}`);
-      if (row) row.remove();
-      alert('✓ ' + data.message);
+      if (row) {
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 250);
+      }
+      alert(data.message || 'Cutoff record deleted successfully!');
     } else {
-      alert('❌ Error: ' + (data.error || 'Failed to delete cutoff'));
+      alert('Error: ' + (data.error || 'Failed to delete cutoff'));
     }
   } catch (err) {
-    alert('❌ Connection failed: ' + err.message);
+    alert('Connection failed: ' + err.message);
   }
 }
+
+// Live Inline Status Auto-Save for Results Table
+document.querySelectorAll('.result-status-select').forEach(select => {
+  select.addEventListener('change', async () => {
+    const eventId = select.getAttribute('data-event-id');
+    const status = select.value;
+    select.disabled = true;
+    try {
+      const res = await fetch('/api/v1/admin/events/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: eventId, status: status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        select.style.borderColor = '#059669';
+        select.style.background = '#ecfdf5';
+        setTimeout(() => {
+          select.style.borderColor = '';
+          select.style.background = '';
+        }, 1500);
+      } else {
+        alert('❌ ' + (data.error || 'Failed to update status.'));
+      }
+    } catch (err) {
+      alert('❌ Network error while updating result status.');
+    } finally {
+      select.disabled = false;
+    }
+  });
+});
 </script>
 
 <?php require_once __DIR__ . '/partials/admin_layout_bottom.php'; ?>

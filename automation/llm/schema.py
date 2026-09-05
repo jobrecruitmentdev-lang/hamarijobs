@@ -31,6 +31,8 @@ class ImportantDates(BaseModel):
     correction_window_end: Optional[str] = None
     admit_card_date: Optional[str] = None
     exam_date: Optional[str] = None
+    tentative_exam_window: Optional[str] = None
+    is_exam_date_announced: bool = False
     result_date: Optional[str] = None
 
 class AgeLimit(BaseModel):

@@ -78,7 +78,7 @@ require_once __DIR__ . '/partials/header.php';
       </a>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
       <div class="commission-icon" style="width: 58px; height: 58px; font-size: 1.75rem; margin: 0;">
         <?= $comm['emblem'] ?>
       </div>
@@ -93,7 +93,7 @@ require_once __DIR__ . '/partials/header.php';
     </div>
 
     <p class="dossier-summary">
-      <?= htmlspecialchars($comm['description']) ?>
+      <?= htmlspecialchars($comm['description']) ?> Candidates tracking official employment notices can review <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;"><?= htmlspecialchars($comm['name']) ?> Recruitment</a> updates, examination schemes, and eligibility standards.
     </p>
 
     <!-- Quick Stats Row -->
@@ -123,6 +123,13 @@ require_once __DIR__ . '/partials/header.php';
         <p class="section-subtitle">
           Directly verified from the official <?= htmlspecialchars($comm['short']) ?> gazette publication
         </p>
+      </div>
+    </div>
+
+    <!-- Commission Career Advisory Banner (Backlink 2) -->
+    <div style="background: var(--bg-surface-elevated); border-left: 4px solid var(--primary-red); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.75rem; border: 1px solid var(--border-subtle); border-left-width: 4px;">
+      <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+        <strong style="color: var(--text-primary);">📌 Recruitment Intelligence Advisory:</strong> Real-time alerts, syllabus breakdowns, and cut-off trends for all <?= htmlspecialchars($comm['short']) ?> posts are archived on the <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Government Job Recruitment</a> portal for competitive exam aspirants.
       </div>
     </div>
 

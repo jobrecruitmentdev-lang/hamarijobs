@@ -12,6 +12,26 @@ class AdminController {
     }
 
     /**
+     * Check if request is authenticated via internal worker secret
+     */
+    public static function isWorkerAuthenticated(): bool {
+        $expectedSecret = getenv('INTERNAL_API_SECRET') ?: ($_ENV['INTERNAL_API_SECRET'] ?? '');
+        if (empty($expectedSecret)) {
+            return false;
+        }
+
+        $providedSecret = $_SERVER['HTTP_X_INTERNAL_SECRET'] ?? '';
+        if (empty($providedSecret) && isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $parts = explode(' ', $_SERVER['HTTP_AUTHORIZATION']);
+            if (count($parts) === 2 && $parts[0] === 'Bearer') {
+                $providedSecret = $parts[1];
+            }
+        }
+
+        return !empty($providedSecret) && hash_equals($expectedSecret, $providedSecret);
+    }
+
+    /**
      * Check if currently logged in user is an authorized admin or internal worker
      */
     public static function isAuthenticated(): bool {
@@ -23,21 +43,34 @@ class AdminController {
             return true;
         }
 
-        $expectedSecret = getenv('INTERNAL_API_SECRET') ?: 'gov_sec_sync_k9a2b8e4f1c7d3a5e8b0c2d4e6f8a0b2';
-        $providedSecret = $_SERVER['HTTP_X_INTERNAL_SECRET'] ?? '';
+        return self::isWorkerAuthenticated();
+    }
 
-        if (empty($providedSecret) && isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            $parts = explode(' ', $_SERVER['HTTP_AUTHORIZATION']);
-            if (count($parts) === 2 && $parts[0] === 'Bearer') {
-                $providedSecret = $parts[1];
-            }
-        }
-
-        if (!empty($providedSecret) && hash_equals($expectedSecret, $providedSecret)) {
+    /**
+     * Verify CSRF security token for state-changing admin requests
+     */
+    public static function verifyCsrf(): bool {
+        // Internal worker requests authenticated via secret bypass CSRF
+        if (self::isWorkerAuthenticated()) {
             return true;
         }
 
-        return false;
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $sessionToken = $_SESSION['csrf_token'] ?? '';
+        if (empty($sessionToken)) {
+            return false;
+        }
+
+        $providedToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($providedToken)) {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $providedToken = $input['csrf_token'] ?? ($_POST['csrf_token'] ?? '');
+        }
+
+        return !empty($providedToken) && hash_equals($sessionToken, $providedToken);
     }
 
     /**
@@ -55,11 +88,50 @@ class AdminController {
     }
 
     /**
-     * Process Admin Login
+     * Get validated client IP address
+     */
+    private function getClientIp(): string {
+        $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] 
+            ?? $_SERVER['HTTP_X_FORWARDED_FOR'] 
+            ?? $_SERVER['REMOTE_ADDR'] 
+            ?? '127.0.0.1';
+        if (str_contains($ip, ',')) {
+            $ip = trim(explode(',', $ip)[0]);
+        }
+        return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '127.0.0.1';
+    }
+
+    /**
+     * Process Admin Login with Brute-Force Rate Limiting & Session Regeneration
      */
     public function login(): void {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
+        }
+
+        $clientIp = $this->getClientIp();
+
+        // 1. Cleanup expired attempts (> 15 minutes)
+        try {
+            $this->db->query("DELETE FROM login_attempts WHERE attempted_at < (NOW() - INTERVAL 15 MINUTE)");
+        } catch (\Throwable $e) {}
+
+        // 2. Check current failed attempts for this IP
+        $stmtCount = $this->db->prepare("
+            SELECT COUNT(*) as fail_count 
+            FROM login_attempts 
+            WHERE ip_address = ? AND attempted_at >= (NOW() - INTERVAL 15 MINUTE)
+        ");
+        $stmtCount->execute([$clientIp]);
+        $failCount = (int)$stmtCount->fetchColumn();
+
+        if ($failCount >= 5) {
+            http_response_code(429);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Too many failed login attempts. Your IP has been temporarily locked out for 15 minutes.'
+            ]);
+            return;
         }
 
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
@@ -82,6 +154,12 @@ class AdminController {
         $user = $stmt->fetch();
 
         if (!$user) {
+            // Record failed attempt
+            try {
+                $failStmt = $this->db->prepare("INSERT INTO login_attempts (ip_address) VALUES (?)");
+                $failStmt->execute([$clientIp]);
+            } catch (\Throwable $e) {}
+
             http_response_code(401);
             echo json_encode(['success' => false, 'error' => 'Invalid admin credentials or unauthorized account.']);
             return;
@@ -93,17 +171,36 @@ class AdminController {
             return;
         }
 
+        // Strictly verify password using cryptographic hash
         $isValid = password_verify($password, $user['password_hash']);
-        
-        if (!$isValid && $password === $user['password_hash']) {
-            $isValid = true;
+        if (!$isValid && str_starts_with($user['password_hash'], '$2b$')) {
+            $hy = str_replace('$2b$', '$2y$', $user['password_hash']);
+            $isValid = password_verify($password, $hy);
         }
 
         if (!$isValid) {
+            // Record failed attempt
+            try {
+                $failStmt = $this->db->prepare("INSERT INTO login_attempts (ip_address) VALUES (?)");
+                $failStmt->execute([$clientIp]);
+            } catch (\Throwable $e) {}
+
             http_response_code(401);
             echo json_encode(['success' => false, 'error' => 'Invalid email or password.']);
             return;
         }
+
+        // Login success: Clear failed attempts for this IP
+        try {
+            $clearStmt = $this->db->prepare("DELETE FROM login_attempts WHERE ip_address = ?");
+            $clearStmt->execute([$clientIp]);
+        } catch (\Throwable $e) {}
+
+        // Regenerate session ID to prevent Session Fixation attacks
+        session_regenerate_id(true);
+
+        // Ensure fresh CSRF token
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
         $_SESSION['admin_user'] = [
             'id' => $user['id'],
@@ -116,6 +213,7 @@ class AdminController {
         echo json_encode([
             'success' => true,
             'message' => 'Admin authentication successful',
+            'csrf_token' => $_SESSION['csrf_token'],
             'user' => [
                 'username' => $user['username'],
                 'email' => $user['email'],
@@ -132,7 +230,14 @@ class AdminController {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        unset($_SESSION['admin_user']);
+        $_SESSION = [];
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
         session_destroy();
 
         if (!empty($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
@@ -197,12 +302,13 @@ class AdminController {
         $workspaceRoot = dirname(dirname(dirname(__DIR__)));
 
         $commandMap = [
-            'crawl' => "python automation/engine/orchestrator.py",
+            'crawl' => "python automation/live_ingestion_pipeline.py",
+            'orchestrator' => "python automation/engine/orchestrator.py",
             'exams' => "python automation/intelligence/exam_engine.py",
             'sitemap' => "python automation/seo/sitemap_generator.py"
         ];
 
-        $cmd = $commandMap[$action] ?? "python automation/engine/orchestrator.py";
+        $cmd = $commandMap[$action] ?? "python automation/live_ingestion_pipeline.py";
         
         $output = [];
         $returnVar = 0;
@@ -318,7 +424,7 @@ class AdminController {
     }
 
     /**
-     * Delete Recruitment
+     * Delete Recruitment Notification (with safe cascade cleanup)
      */
     public function deleteJob(): void {
         $this->requireAuth();
@@ -327,18 +433,42 @@ class AdminController {
 
         if ($jobId <= 0) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Valid Job ID required']);
+            echo json_encode(['success' => false, 'error' => 'Valid Recruitment ID required']);
             return;
         }
 
-        $this->db->prepare("DELETE FROM fact_claims WHERE entity_type = 'Recruitment' AND entity_id = ?")->execute([$jobId]);
-        $this->db->prepare("DELETE FROM recruitment_events WHERE recruitment_id = ?")->execute([$jobId]);
-        $this->db->prepare("DELETE FROM recruitments WHERE id = ?")->execute([$jobId]);
+        try {
+            $this->db->beginTransaction();
 
-        echo json_encode([
-            'success' => true,
-            'message' => "Recruitment #{$jobId} deleted successfully"
-        ]);
+            // 1. Delete associated recruitment events
+            $this->db->prepare("DELETE FROM recruitment_events WHERE recruitment_id = ?")->execute([$jobId]);
+
+            // 2. Delete associated fact claims
+            $this->db->prepare("DELETE FROM fact_claims WHERE entity_type = 'Recruitment' AND entity_id = ?")->execute([$jobId]);
+
+            // 3. Nullify references in cutoff_records
+            $this->db->prepare("UPDATE cutoff_records SET recruitment_id = NULL WHERE recruitment_id = ?")->execute([$jobId]);
+
+            // 4. Nullify references in articles
+            $this->db->prepare("UPDATE articles SET recruitment_id = NULL WHERE recruitment_id = ?")->execute([$jobId]);
+
+            // 5. Delete parent recruitment
+            $stmt = $this->db->prepare("DELETE FROM recruitments WHERE id = ?");
+            $stmt->execute([$jobId]);
+
+            $this->db->commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Recruitment notification #{$jobId} deleted successfully"
+            ]);
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -427,8 +557,7 @@ class AdminController {
 
         $sourceName = trim($input['source_name'] ?? '');
         $baseUrl = trim($input['base_url'] ?? '');
-        $sourceType = trim($input['source_type'] ?? 'Portal');
-        $crawlFrequency = trim($input['crawl_frequency'] ?? 'Daily');
+        $sourceType = trim($input['source_type'] ?? 'Other');
         $priority = intval($input['priority'] ?? 5);
 
         if (empty($sourceName) || empty($baseUrl)) {
@@ -437,16 +566,76 @@ class AdminController {
             return;
         }
 
+        $domain = parse_url($baseUrl, PHP_URL_HOST);
+        if (!$domain) {
+            $clean = preg_replace('#^https?://#i', '', $baseUrl);
+            $domain = explode('/', $clean)[0] ?: 'official.gov.in';
+        }
+        $domain = strtolower($domain);
+
+        $typeMap = [
+            'Central' => 'UPSC',
+            'State' => 'StatePSC',
+            'Railway' => 'Railway',
+            'Banking' => 'Bank',
+            'Defence' => 'Defense',
+            'Police' => 'Police',
+            'Other' => 'Other'
+        ];
+        $enumType = $typeMap[$sourceType] ?? 'Other';
+
+        $pNum = intval($priority);
+        if ($pNum >= 8) {
+            $enumPriority = 'Critical';
+        } elseif ($pNum >= 6) {
+            $enumPriority = 'High';
+        } elseif ($pNum >= 4) {
+            $enumPriority = 'Medium';
+        } else {
+            $enumPriority = 'Low';
+        }
+
         $stmt = $this->db->prepare("
-            INSERT INTO source_registry (source_name, base_url, source_type, crawl_frequency, priority, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, 'Active', NOW(), NOW())
+            INSERT INTO source_registry (
+                source_name, domain, website_url, recruitment_url, source_type, priority, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, 'Active', NOW(), NOW())
+            ON DUPLICATE KEY UPDATE 
+                source_name = VALUES(source_name),
+                website_url = VALUES(website_url),
+                recruitment_url = VALUES(recruitment_url),
+                source_type = VALUES(source_type),
+                priority = VALUES(priority),
+                updated_at = NOW()
         ");
-        $stmt->execute([$sourceName, $baseUrl, $sourceType, $crawlFrequency, $priority]);
+        $stmt->execute([$sourceName, $domain, $baseUrl, $baseUrl, $enumType, $enumPriority]);
 
         echo json_encode([
             'success' => true,
             'message' => "Successfully registered monitored source: {$sourceName}",
             'id' => $this->db->lastInsertId()
+        ]);
+    }
+
+    /**
+     * Delete Monitored Source
+     */
+    public function deleteSource(): void {
+        $this->requireAuth();
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $id = intval($input['id'] ?? 0);
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Valid Source ID required']);
+            return;
+        }
+
+        $stmt = $this->db->prepare("DELETE FROM source_registry WHERE id = ?");
+        $stmt->execute([$id]);
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Source #{$id} removed from monitored registry"
         ]);
     }
 
@@ -568,6 +757,7 @@ class AdminController {
         ]);
     }
 
+
     /**
      * Fetch Single Exam Hub Data for Editing
      */
@@ -641,7 +831,7 @@ class AdminController {
     }
 
     /**
-     * Delete Exam Hub
+     * Delete Exam Hub (with safe cascade cleanup)
      */
     public function deleteExam(): void {
         $this->requireAuth();
@@ -654,13 +844,33 @@ class AdminController {
             return;
         }
 
-        $stmt = $this->db->prepare("DELETE FROM exams WHERE id = ?");
-        $stmt->execute([$examId]);
+        try {
+            $this->db->beginTransaction();
 
-        echo json_encode([
-            'success' => true,
-            'message' => "Exam Hub #{$examId} deleted successfully"
-        ]);
+            // 1. Cascade cleanup child tables referencing exams
+            $this->db->prepare("DELETE FROM cutoff_records WHERE exam_id = ?")->execute([$examId]);
+            $this->db->prepare("DELETE FROM exam_patterns WHERE exam_id = ?")->execute([$examId]);
+            $this->db->prepare("DELETE FROM exam_phases WHERE exam_id = ?")->execute([$examId]);
+            $this->db->prepare("DELETE FROM exam_syllabus WHERE exam_id = ?")->execute([$examId]);
+            $this->db->prepare("DELETE FROM question_bank WHERE exam_id = ?")->execute([$examId]);
+
+            // 2. Delete parent exam
+            $stmt = $this->db->prepare("DELETE FROM exams WHERE id = ?");
+            $stmt->execute([$examId]);
+
+            $this->db->commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Exam Hub #{$examId} deleted successfully"
+            ]);
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -734,7 +944,7 @@ class AdminController {
     }
 
     /**
-     * Delete Guide Article
+     * Delete Guide Article (with safe cascade cleanup)
      */
     public function deleteArticle(): void {
         $this->requireAuth();
@@ -747,13 +957,29 @@ class AdminController {
             return;
         }
 
-        $stmt = $this->db->prepare("DELETE FROM articles WHERE id = ?");
-        $stmt->execute([$artId]);
+        try {
+            $this->db->beginTransaction();
 
-        echo json_encode([
-            'success' => true,
-            'message' => "Guide Article #{$artId} deleted successfully"
-        ]);
+            // 1. Delete article versions first
+            $this->db->prepare("DELETE FROM article_versions WHERE article_id = ?")->execute([$artId]);
+
+            // 2. Delete parent article
+            $stmt = $this->db->prepare("DELETE FROM articles WHERE id = ?");
+            $stmt->execute([$artId]);
+
+            $this->db->commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Guide Article #{$artId} deleted successfully"
+            ]);
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -792,7 +1018,7 @@ class AdminController {
         $name = trim($input['name'] ?? '');
         $shortName = trim($input['short_name'] ?? '');
         $slug = trim($input['slug'] ?? '');
-        $emblem = trim($input['emblem'] ?? '🏛️');
+        $emblem = trim($input['emblem'] ?? 'landmark');
         $hq = trim($input['hq'] ?? '');
         $website = trim($input['website'] ?? 'https://gov.in');
         $otrUrl = trim($input['otr_url'] ?? '');
@@ -811,25 +1037,49 @@ class AdminController {
 
         if (empty($slug)) {
             $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $shortName)));
+        } else {
+            $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $slug)));
+        }
+
+        if (empty($slug)) {
+            $slug = 'commission-' . time();
+        }
+
+        // Automatic slug collision resolver (prevents duplicate key errors)
+        $baseSlug = $slug;
+        $counter = 1;
+        while (true) {
+            $checkStmt = $this->db->prepare("SELECT id FROM commissions WHERE slug = ? LIMIT 1");
+            $checkStmt->execute([$slug]);
+            if (!$checkStmt->fetch()) {
+                break;
+            }
+            $counter++;
+            $slug = "{$baseSlug}-{$counter}";
         }
 
         $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000, mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
 
-        $stmt = $this->db->prepare("
-            INSERT INTO commissions (
-                commission_uuid, name, short_name, slug, emblem, hq, website, otr_url, category, description, annual_candidates, selection_phases, filter_keyword, is_active, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-        ");
-        $stmt->execute([
-            $uuid, $name, $shortName, $slug, $emblem, $hq, $website, $otrUrl, $category, $description, $annualCandidates, $selectionPhases, $filterKeyword, $isActive
-        ]);
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO commissions (
+                    commission_uuid, name, short_name, slug, emblem, hq, website, otr_url, category, description, annual_candidates, selection_phases, filter_keyword, is_active, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ");
+            $stmt->execute([
+                $uuid, $name, $shortName, $slug, $emblem, $hq, $website, $otrUrl, $category, $description, $annualCandidates, $selectionPhases, $filterKeyword, $isActive
+            ]);
 
-        echo json_encode([
-            'success' => true,
-            'message' => "Successfully created Commission: {$shortName}",
-            'id' => $this->db->lastInsertId(),
-            'slug' => $slug
-        ]);
+            echo json_encode([
+                'success' => true,
+                'message' => "Successfully created Commission: {$shortName}",
+                'id' => $this->db->lastInsertId(),
+                'slug' => $slug
+            ]);
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -953,6 +1203,7 @@ class AdminController {
         $orgName = trim($input['organization_name'] ?? '');
         $eventType = trim($input['event_type'] ?? 'ADMIT_CARD_RELEASED');
         $eventTitle = trim($input['event_title'] ?? '');
+        $status = trim($input['status'] ?? 'RELEASED');
         $eventDate = !empty($input['event_date']) ? trim($input['event_date']) : date('Y-m-d');
         $isTentative = !empty($input['is_tentative']) ? 1 : 0;
         $details = trim($input['details'] ?? '');
@@ -972,10 +1223,10 @@ class AdminController {
 
         $stmt = $this->db->prepare("
             INSERT INTO recruitment_events (
-                recruitment_id, organization_name, event_type, event_title, event_date, is_tentative, details, reference_url, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                recruitment_id, organization_name, event_type, event_title, status, event_date, is_tentative, details, reference_url, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
-        $stmt->execute([$recId, $orgName, $eventType, $eventTitle, $eventDate, $isTentative, $details, $refUrl]);
+        $stmt->execute([$recId, $orgName, $eventType, $eventTitle, $status, $eventDate, $isTentative, $details, $refUrl]);
 
         echo json_encode([
             'success' => true,
@@ -1002,6 +1253,7 @@ class AdminController {
         $orgName = trim($input['organization_name'] ?? '');
         $eventType = trim($input['event_type'] ?? 'ADMIT_CARD_RELEASED');
         $eventTitle = trim($input['event_title'] ?? '');
+        $status = trim($input['status'] ?? 'RELEASED');
         $eventDate = !empty($input['event_date']) ? trim($input['event_date']) : date('Y-m-d');
         $isTentative = !empty($input['is_tentative']) ? 1 : 0;
         $details = trim($input['details'] ?? '');
@@ -1022,15 +1274,46 @@ class AdminController {
         $stmt = $this->db->prepare("
             UPDATE recruitment_events SET 
                 recruitment_id = ?, organization_name = ?, event_type = ?,
-                event_title = ?, event_date = ?, is_tentative = ?,
+                event_title = ?, status = ?, event_date = ?, is_tentative = ?,
                 details = ?, reference_url = ?
             WHERE id = ?
         ");
-        $stmt->execute([$recId, $orgName, $eventType, $eventTitle, $eventDate, $isTentative, $details, $refUrl, $id]);
+        $stmt->execute([$recId, $orgName, $eventType, $eventTitle, $status, $eventDate, $isTentative, $details, $refUrl, $id]);
 
         echo json_encode([
             'success' => true,
             'message' => "Successfully updated event: {$eventTitle}"
+        ]);
+    }
+
+    /**
+     * Inline Update Event Status (Admit Cards / Results / Milestones)
+     */
+    public function updateEventStatus(): void {
+        $this->requireAuth();
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $id = intval($input['id'] ?? 0);
+        $status = trim($input['status'] ?? 'RELEASED');
+
+        $validStatuses = ['RELEASED', 'EXPECTED', 'CITY_SLIP', 'POSTPONED', 'DECLARED', 'PROVISIONAL_KEY', 'FINAL_LIST'];
+        if (!in_array($status, $validStatuses, true)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid event status']);
+            return;
+        }
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Valid event ID required']);
+            return;
+        }
+
+        $stmt = $this->db->prepare("UPDATE recruitment_events SET status = ? WHERE id = ?");
+        $stmt->execute([$status, $id]);
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Event #{$id} status updated to '{$status}'"
         ]);
     }
 
@@ -1094,6 +1377,82 @@ class AdminController {
     }
 
     /**
+     * Fetch Single Cutoff Record for Editing
+     */
+    public function getCutoff(): void {
+        $this->requireAuth();
+        $id = intval($_GET['id'] ?? 0);
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Valid Cutoff ID required']);
+            return;
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT c.*, e.name as exam_name
+            FROM cutoff_records c
+            LEFT JOIN exams e ON c.exam_id = e.id
+            WHERE c.id = ?
+        ");
+        $stmt->execute([$id]);
+        $cutoff = $stmt->fetch();
+
+        if (!$cutoff) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Cutoff record not found']);
+            return;
+        }
+
+        echo json_encode(['success' => true, 'data' => $cutoff]);
+    }
+
+    /**
+     * Update Cutoff Record
+     */
+    public function updateCutoff(): void {
+        $this->requireAuth();
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $id = intval($input['id'] ?? 0);
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Valid Cutoff ID required']);
+            return;
+        }
+
+        $examId = intval($input['exam_id'] ?? 0);
+        $recId = !empty($input['recruitment_id']) ? intval($input['recruitment_id']) : null;
+        $year = intval($input['year'] ?? date('Y'));
+        $category = trim($input['category'] ?? 'UR');
+        $cutoffMarks = floatval($input['cutoff_marks'] ?? 0);
+        $totalMarks = floatval($input['total_marks'] ?? 200);
+        $candidates = !empty($input['qualifying_candidates']) ? intval($input['qualifying_candidates']) : null;
+        $url = trim($input['official_notice_url'] ?? 'https://gov.in');
+        $notes = trim($input['notes'] ?? '');
+
+        if ($examId <= 0 || $cutoffMarks <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Exam selection and valid Cutoff marks are required']);
+            return;
+        }
+
+        $stmt = $this->db->prepare("
+            UPDATE cutoff_records SET
+                exam_id = ?, recruitment_id = ?, year = ?, category = ?,
+                cutoff_marks = ?, total_marks = ?, qualifying_candidates = ?,
+                official_notice_url = ?, notes = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$examId, $recId, $year, $category, $cutoffMarks, $totalMarks, $candidates, $url, $notes, $id]);
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Cutoff record #{$id} updated successfully"
+        ]);
+    }
+
+    /**
      * Delete Cutoff Record
      */
     public function deleteCutoff(): void {
@@ -1115,5 +1474,210 @@ class AdminController {
             'message' => "Cutoff record #{$id} deleted successfully"
         ]);
     }
+
+    /**
+     * Get Autonomous 4-Hour Daemon Status
+     */
+    public function getDaemonStatus(): void {
+        $this->requireAuth();
+        $workspaceRoot = dirname(dirname(dirname(__DIR__)));
+        $stateFile = $workspaceRoot . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'daemon_state.json';
+
+        $state = [
+            'status' => 'STOPPED',
+            'pid' => null,
+            'interval_hours' => 4,
+            'started_at' => null,
+            'last_run_at' => null,
+            'next_run_at' => null,
+            'last_run_status' => null
+        ];
+
+        if (file_exists($stateFile)) {
+            $content = file_get_contents($stateFile);
+            $parsed = json_decode($content, true);
+            if (is_array($parsed)) {
+                $state = array_merge($state, $parsed);
+            }
+        }
+
+        // Double check PID if marked RUNNING
+        if ($state['status'] === 'RUNNING' && !empty($state['pid'])) {
+            $pid = intval($state['pid']);
+            $isAlive = false;
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                $chk = [];
+                exec("tasklist /FI \"PID eq {$pid}\" /FO CSV /NH", $chk);
+                $isAlive = !empty($chk) && str_contains(implode(" ", $chk), (string)$pid);
+            } else {
+                $isAlive = file_exists("/proc/{$pid}");
+            }
+            if (!$isAlive) {
+                $state['status'] = 'STOPPED';
+                $state['pid'] = null;
+            }
+        }
+
+        echo json_encode(['success' => true, 'data' => $state]);
+    }
+
+    /**
+     * Start / Stop Autonomous 4-Hour Daemon
+     */
+    public function toggleDaemon(): void {
+        $this->requireAuth();
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $action = trim($input['action'] ?? 'status');
+        $workspaceRoot = dirname(dirname(dirname(__DIR__)));
+
+        if ($action === 'start') {
+            $out = [];
+            exec("cd /d \"{$workspaceRoot}\" && python automation/scheduler/cron.py --start 2>&1", $out);
+            $this->getDaemonStatus();
+            return;
+        } elseif ($action === 'stop') {
+            $out = [];
+            exec("cd /d \"{$workspaceRoot}\" && python automation/scheduler/cron.py --stop 2>&1", $out);
+            $this->getDaemonStatus();
+            return;
+        }
+
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Action must be start or stop']);
+    }
+
+    /**
+     * Fetch Audit Log of Automation Runs from MySQL
+     */
+    public function getAutomationRuns(): void {
+        $this->requireAuth();
+        $stmt = $this->db->query("
+            SELECT id, run_uuid, stage_name, trigger_source, status,
+                   notices_found, new_ingested, skipped_unchanged,
+                   quarantined_count AS quarantined,
+                   execution_time_seconds AS elapsed_seconds,
+                   started_at, completed_at
+            FROM automation_runs
+            ORDER BY id DESC
+            LIMIT 20
+        ");
+        $runs = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'data' => $runs]);
+    }
+
+    /**
+     * Fetch Quarantined Notices Requiring Verification
+     */
+    public function getReviewQueue(): void {
+        $this->requireAuth();
+        $stmt = $this->db->query("
+            SELECT id, title, organization_name, total_vacancies, qualification_level,
+                   official_apply_url, primary_notification_url, review_status, anomaly_flags,
+                   created_at, updated_at
+            FROM recruitments
+            WHERE review_status = 'REVIEW_PENDING'
+            ORDER BY id DESC
+            LIMIT 50
+        ");
+        $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'data' => $items]);
+    }
+
+    /**
+     * Approve Quarantined Notice
+     */
+    public function approveReviewItem(): void {
+        $this->requireAuth();
+        $input = json_decode(file_get_contents('php://input'), true) ?? [];
+        $id = intval($input['id'] ?? ($_POST['id'] ?? ($_GET['id'] ?? 0)));
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Valid Recruitment ID required']);
+            return;
+        }
+
+        // Fetch recruitment title
+        $fetchStmt = $this->db->prepare("SELECT title FROM recruitments WHERE id = ?");
+        $fetchStmt->execute([$id]);
+        $rec = $fetchStmt->fetch();
+
+        if (!$rec) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => "Recruitment #{$id} not found"]);
+            return;
+        }
+
+        $stmt = $this->db->prepare("
+            UPDATE recruitments 
+            SET review_status = 'VERIFIED', status = 'Active', updated_at = NOW() 
+            WHERE id = ?
+        ");
+        $stmt->execute([$id]);
+
+        // Synchronize corresponding public job posting if present
+        try {
+            $stmtJob = $this->db->prepare("
+                UPDATE jobs 
+                SET status = 'OPEN', updated_at = NOW() 
+                WHERE title = ?
+            ");
+            $stmtJob->execute([$rec['title']]);
+        } catch (\Throwable $e) {}
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Recruitment #{$id} ({$rec['title']}) approved and published to live portal"
+        ]);
+    }
+
+    /**
+     * Reject Quarantined Notice
+     */
+    public function rejectReviewItem(): void {
+        $this->requireAuth();
+        $input = json_decode(file_get_contents('php://input'), true) ?? [];
+        $id = intval($input['id'] ?? ($_POST['id'] ?? ($_GET['id'] ?? 0)));
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Valid Recruitment ID required']);
+            return;
+        }
+
+        // Fetch recruitment title
+        $fetchStmt = $this->db->prepare("SELECT title FROM recruitments WHERE id = ?");
+        $fetchStmt->execute([$id]);
+        $rec = $fetchStmt->fetch();
+
+        if (!$rec) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => "Recruitment #{$id} not found"]);
+            return;
+        }
+
+        $stmt = $this->db->prepare("
+            UPDATE recruitments 
+            SET review_status = 'REJECTED', status = 'Cancelled', updated_at = NOW() 
+            WHERE id = ?
+        ");
+        $stmt->execute([$id]);
+
+        // Close corresponding public job posting if present
+        try {
+            $stmtJob = $this->db->prepare("
+                UPDATE jobs 
+                SET status = 'CLOSED', updated_at = NOW() 
+                WHERE title = ?
+            ");
+            $stmtJob->execute([$rec['title']]);
+        } catch (\Throwable $e) {}
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Recruitment #{$id} ({$rec['title']}) rejected and archived"
+        ]);
+    }
 }
+
 

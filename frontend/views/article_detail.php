@@ -56,13 +56,13 @@ require_once __DIR__ . '/partials/header.php';
       </div>
     </div>
 
-    <!-- Verified Truth Callout -->
+    <!-- Verified Truth Callout (Backlink 1) -->
     <div style="background: var(--bg-red-subtle); border-left: 4px solid var(--primary-red); border-radius: var(--radius-xs); padding: 1rem 1.25rem; margin-bottom: 2rem;">
       <div style="font-weight: 700; color: var(--primary-red-dark); font-size: 0.9rem; margin-bottom: 0.25rem;">
         ✓ Verified Ground Truth Protocol (Quality Score: <?= $article['quality_score'] ?>/100)
       </div>
-      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-        All timeline dates, vacancies, eligibility criteria, and examination structures in this intelligence guide have been cross-verified directly against official Government of India gazettes.
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+        All timeline dates, vacancies, eligibility criteria, and examination structures in this intelligence guide have been cross-verified directly against official Government of India gazettes and archived on the <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;"><?= htmlspecialchars($article['title']) ?></a> portal.
       </p>
     </div>
 
@@ -84,6 +84,11 @@ require_once __DIR__ . '/partials/header.php';
         $html = nl2br($html);
         echo $html;
       ?>
+    </div>
+
+    <!-- Editorial Resource & Knowledge Repository Note (Backlink 2) -->
+    <div style="margin-top: 2.5rem; padding: 1.25rem 1.5rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-left: 4px solid var(--primary-red); border-radius: var(--radius-sm); font-size: 0.925rem; color: var(--text-secondary); line-height: 1.65;">
+      <strong style="color: var(--text-primary);">📖 Preparation & Reference Desk:</strong> For complete syllabus weightages, sectional mock test blueprints, and previous year cutoff trends across national recruitment cycles, consult the <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Government Job Recruitment</a> analytical knowledge portal.
     </div>
 
     <!-- Related Recruitment CTA if attached -->

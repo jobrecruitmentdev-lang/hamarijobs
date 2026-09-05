@@ -51,7 +51,7 @@ require_once __DIR__ . '/partials/header.php';
 
   <!-- Search & Filter Bar -->
   <div class="filter-panel">
-    <form method="GET" action="/exams" class="filter-grid" style="grid-template-columns: 2fr 1fr auto;">
+    <form method="GET" action="/exams" class="filter-grid-3">
       <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Search by Exam Name, Short Code, Commission..." class="form-control">
       
       <select name="category" class="form-control">
@@ -65,9 +65,9 @@ require_once __DIR__ . '/partials/header.php';
       </select>
 
       <div style="display: flex; gap: 0.5rem;">
-        <button type="submit" class="btn btn-primary">Filter Hubs</button>
+        <button type="submit" class="btn btn-primary" style="flex: 1;"><?= app_icon('search', '', 14) ?> Filter</button>
         <?php if (!empty($search) || !empty($category)): ?>
-          <a href="/exams" class="btn btn-glass">Reset</a>
+          <a href="/exams" class="btn btn-glass" title="Reset Filters">✕</a>
         <?php endif; ?>
       </div>
     </form>

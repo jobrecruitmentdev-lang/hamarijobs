@@ -9,7 +9,8 @@ $exams = $db->query("SELECT * FROM exams ORDER BY category ASC, name ASC")->fetc
 $pageTitle = "Manage Exam Hubs — Admin Control Center";
 $adminPageTitle = "Exam Hubs";
 $adminPageHeading = "Autonomous Examination Hubs & Pattern Directory";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addExamModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Create Exam Hub</button>';
+require_once __DIR__ . '/partials/admin_icons.php';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addExamModal\')" class="admin-btn admin-btn-primary admin-btn-sm">' . admin_icon('plus', '', 14) . ' Create Exam Hub</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -18,11 +19,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">Registered Examination Hubs</h3>
+      <h3 class="admin-card-title"><?= admin_icon('graduation-cap', '', 18) ?> Registered Examination Hubs</h3>
       <p class="admin-card-desc">Showing <strong><?= count($exams) ?></strong> national and state recruitment test hubs with structured patterns and cutoffs</p>
     </div>
     <button onclick="openModal('addExamModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      + Create Exam Hub
+      <?= admin_icon('plus', '', 14) ?> Create Exam Hub
     </button>
   </div>
 
@@ -82,13 +83,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <a href="/exams/<?= htmlspecialchars($ex['slug']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-icon-only" title="View Public Exam Hub">
-                  
+                  <?= admin_icon('eye', '', 15) ?>
                 </a>
                 <button onclick="editExam(<?= $ex['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Exam Hub">
-                  
+                  <?= admin_icon('edit', '', 15) ?>
                 </button>
                 <button onclick="deleteExam(<?= $ex['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Exam Hub">
-                  
+                  <?= admin_icon('trash', '', 15) ?>
                 </button>
               </div>
             </td>
@@ -103,7 +104,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addExamModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">+ Create New Exam Intelligence Hub</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('plus', '', 18) ?> Create New Exam Intelligence Hub</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addExamModal')">&times;</button>
     </div>
 
@@ -181,7 +182,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editExamModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title"> Edit Examination Hub</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('edit', '', 18) ?> Edit Examination Hub</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editExamModal')">&times;</button>
     </div>
 
@@ -262,6 +263,16 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 </div>
 
 <script>
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('active');
+}
+
 // 1. Add Exam Form AJAX
 document.getElementById('addExamForm').addEventListener('submit', async (e) => {
   e.preventDefault();

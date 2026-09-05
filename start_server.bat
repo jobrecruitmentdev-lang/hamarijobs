@@ -1,12 +1,22 @@
 @echo off
-title Gov-Job Automation Server (Port 8080)
+title HamariJobs Government Recruitment Web Portal (Port 8080)
 cd /d "%~dp0"
-if exist "venv\Scripts\activate.bat" (
-    call venv\Scripts\activate.bat
-) else if exist "..\..\venv\Scripts\activate.bat" (
-    call ..\..\venv\Scripts\activate.bat
-) else if exist "d:\Aamir\venv\Scripts\activate.bat" (
-    call d:\Aamir\venv\Scripts\activate.bat
+
+echo ================================================================
+echo    HAMARIJOBS - GOVERNMENT RECRUITMENT PORTAL
+echo ================================================================
+echo.
+echo [INFO] Starting Live Web Server on:
+echo        - User Portal:  http://localhost:8080/
+echo        - Admin Panel:  http://localhost:8080/admin
+echo.
+echo [INFO] Binding to all interfaces (0.0.0.0:8080)...
+echo.
+
+if exist "C:\xampp\php\php.exe" (
+    "C:\xampp\php\php.exe" -S 0.0.0.0:8080 -t backend/public backend/public/index.php
+) else (
+    php -S 0.0.0.0:8080 -t backend/public backend/public/index.php
 )
-python backend\run.py
+
 pause

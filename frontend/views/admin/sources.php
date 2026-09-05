@@ -9,7 +9,8 @@ $sources = $db->query("SELECT * FROM source_registry ORDER BY priority DESC, sou
 $pageTitle = "Monitored Sources — Admin Control Center";
 $adminPageTitle = "Monitored Sources";
 $adminPageHeading = "Official Gazette Portals & Web Scraper Registry";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addSourceModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Register Source</button>';
+require_once __DIR__ . '/partials/admin_icons.php';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addSourceModal\')" class="admin-btn admin-btn-primary admin-btn-sm">' . admin_icon('plus', '', 14) . ' Register Source</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -18,11 +19,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">Active Gazette Sources</h3>
+      <h3 class="admin-card-title"><?= admin_icon('globe', '', 18) ?> Active Gazette Sources</h3>
       <p class="admin-card-desc">Showing <strong><?= count($sources) ?></strong> monitored official recruitment portals and autonomous crawling endpoints</p>
     </div>
     <button onclick="openModal('addSourceModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      + Register Source
+      <?= admin_icon('plus', '', 14) ?> Register Source
     </button>
   </div>
 
@@ -36,7 +37,8 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <th>Portal Type</th>
           <th>Frequency</th>
           <th>Priority</th>
-          <th style="text-align: right;">Daemon Health</th>
+          <th>Daemon Health</th>
+          <th style="text-align: right;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -45,7 +47,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           $frequency = $s['crawl_frequency'] ?? 'Daily';
           $priorityVal = $s['priority'] ?? 'High';
         ?>
-          <tr>
+          <tr id="source-row-<?= $s['id'] ?>">
             <td>
               <span class="admin-id-badge">#<?= $s['id'] ?></span>
             </td>
@@ -70,8 +72,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
                 <?= is_numeric($priorityVal) ? 'P-' . $priorityVal : $priorityVal ?>
               </span>
             </td>
-            <td style="text-align: right;">
+            <td>
               <span class="admin-badge badge-active">✓ Operational</span>
+            </td>
+            <td style="text-align: right;">
+              <button onclick="deleteSource(<?= $s['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Monitored Source">
+                <?= admin_icon('trash', '', 15) ?>
+              </button>
             </td>
           </tr>
         <?php endforeach; ?>
@@ -84,7 +91,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addSourceModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">+ Register New Monitored Portal</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('plus', '', 18) ?> Register New Monitored Portal</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addSourceModal')">&times;</button>
     </div>
 
@@ -140,6 +147,41 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 </div>
 
 <script>
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('active');
+}
+
+// Delete Monitored Source Action
+async function deleteSource(id) {
+  if (!confirm(`Are you sure you want to remove Source #${id} from the monitored registry?`)) return;
+  try {
+    const res = await fetch('/api/v1/admin/sources/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id })
+    });
+    const result = await res.json();
+    if (result.success) {
+      const row = document.getElementById(`source-row-${id}`);
+      if (row) {
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 250);
+      }
+      alert(result.message || 'Source deleted successfully!');
+    } else {
+      alert(result.error || 'Failed to delete source.');
+    }
+  } catch (err) {
+    alert('Network error while deleting source.');
+  }
+}
+
 // Add Source Form AJAX
 document.getElementById('addSourceForm').addEventListener('submit', async (e) => {
   e.preventDefault();

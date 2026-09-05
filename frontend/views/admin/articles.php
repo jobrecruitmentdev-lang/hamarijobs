@@ -17,7 +17,8 @@ $recs = $db->query("SELECT id, title, organization_name FROM recruitments WHERE 
 $pageTitle = "Manage Preparation Guides — Admin Control Center";
 $adminPageTitle = "Preparation Guides";
 $adminPageHeading = "Editorial Intelligence & Preparation Guides";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addArticleModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Create Guide Article</button>';
+require_once __DIR__ . '/partials/admin_icons.php';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addArticleModal\')" class="admin-btn admin-btn-primary admin-btn-sm">' . admin_icon('plus', '', 14) . ' Create Guide Article</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -26,11 +27,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">Published Editorial Guides</h3>
+      <h3 class="admin-card-title"><?= admin_icon('book-open', '', 18) ?> Published Editorial Guides</h3>
       <p class="admin-card-desc">Showing <strong><?= count($articles) ?></strong> notification guides, syllabus breakdowns, and cutoff analysis reports</p>
     </div>
     <button onclick="openModal('addArticleModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      + Create Guide Article
+      <?= admin_icon('plus', '', 14) ?> Create Guide Article
     </button>
   </div>
 
@@ -84,7 +85,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
               <?php endif; ?>
             </td>
             <td style="font-size: 0.825rem; color: var(--text-muted); white-space: nowrap;">
-              ⏱ <?= $art['reading_time_minutes'] ?> mins
+              <?= admin_icon('clock', '', 14) ?> <?= $art['reading_time_minutes'] ?> mins
             </td>
             <td>
               <span class="admin-badge badge-active">
@@ -94,13 +95,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <a href="/articles/<?= htmlspecialchars($art['slug']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-icon-only" title="View Published Guide">
-                  
+                  <?= admin_icon('eye', '', 15) ?>
                 </a>
                 <button onclick="editArticle(<?= $art['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Guide Article">
-                  
+                  <?= admin_icon('edit', '', 15) ?>
                 </button>
                 <button onclick="deleteArticle(<?= $art['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Guide Article">
-                  
+                  <?= admin_icon('trash', '', 15) ?>
                 </button>
               </div>
             </td>
@@ -115,7 +116,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addArticleModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">+ Publish New Preparation Guide</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('plus', '', 18) ?> Publish New Preparation Guide</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addArticleModal')">&times;</button>
     </div>
 
@@ -186,7 +187,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editArticleModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title"> Edit Preparation Guide</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('edit', '', 18) ?> Edit Preparation Guide</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editArticleModal')">&times;</button>
     </div>
 
@@ -264,6 +265,16 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 </div>
 
 <script>
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('active');
+}
+
 // 1. Add Article Form AJAX
 document.getElementById('addArticleForm').addEventListener('submit', async (e) => {
   e.preventDefault();

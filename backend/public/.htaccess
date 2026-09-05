@@ -1,0 +1,39 @@
+# ==============================================================================
+# HAMARIJOBS PRODUCTION DOCUMENT ROOT RULES (IF ROOT = BACKEND/PUBLIC)
+# ==============================================================================
+
+# Disable directory browsing
+Options -Indexes -MultiViews
+
+# Block access to hidden files, backups, and config files
+<FilesMatch "^\.|\.(env|sql|bak|log|ini|yaml|yml|json|md|sh|py|lock|bat)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Enable URL Rewriting to index.php
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # If the requested file or folder physically exists, serve it directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route everything else through index.php
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

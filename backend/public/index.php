@@ -1,13 +1,49 @@
 <?php
+// 0. Lightweight Environment Variable Loader
+$rootDir = dirname(dirname(__DIR__));
+$envFile = $rootDir . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) continue;
+        if (str_contains($line, '=')) {
+            [$key, $value] = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            if ((str_starts_with($value, '"') && str_ends_with($value, '"')) ||
+                (str_starts_with($value, "'") && str_ends_with($value, "'"))) {
+                $value = substr($value, 1, -1);
+            }
+            if (!array_key_exists($key, $_SERVER) && !array_key_exists($key, $_ENV)) {
+                putenv("{$key}={$value}");
+                $_ENV[$key] = $value;
+                $_SERVER[$key] = $value;
+            }
+        }
+    }
+}
+
+// 0.1 Session Hardening & Security Configuration
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.cookie_samesite', 'Lax');
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        ini_set('session.cookie_secure', '1');
+    }
     session_start();
+}
+
+// Ensure session has a cryptographically secure CSRF token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
 // 1. Bulletproof Static Asset Interceptor
-$rootDir = dirname(dirname(__DIR__));
 $publicDir = __DIR__;
 
 // Check inside backend/public (e.g. /assets/...)
@@ -60,13 +96,18 @@ function serveStaticFile(string $filePath): void {
     }
 }
 
-// Enable CORS and Security Headers
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Internal-Secret, X-Requested-With");
+// Security Headers
 header("X-Content-Type-Options: nosniff");
 header("X-Frame-Options: SAMEORIGIN");
 header("X-XSS-Protection: 1; mode=block");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
+// Enable CORS for API routes if needed
+if (str_starts_with($requestUri, '/api/')) {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Internal-Secret, X-CSRF-Token, X-Requested-With");
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -148,6 +189,40 @@ if (str_starts_with($requestUri, '/api/v1/')) {
             exit;
         }
 
+        // Enforce CSRF verification on state-changing admin actions (POST, PUT, DELETE)
+        if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH']) && !AdminController::verifyCsrf()) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'error' => 'CSRF verification failed: Missing or invalid security token.'
+            ]);
+            exit;
+        }
+
+        if ($apiPath === 'admin/daemon/status' && $method === 'GET') {
+            (new AdminController())->getDaemonStatus();
+            exit;
+        }
+        if ($apiPath === 'admin/daemon/toggle' && ($method === 'POST' || $method === 'GET')) {
+            (new AdminController())->toggleDaemon();
+            exit;
+        }
+        if ($apiPath === 'admin/automation-runs' && $method === 'GET') {
+            (new AdminController())->getAutomationRuns();
+            exit;
+        }
+        if ($apiPath === 'admin/review-queue' && $method === 'GET') {
+            (new AdminController())->getReviewQueue();
+            exit;
+        }
+        if ($apiPath === 'admin/review-queue/approve' && $method === 'POST') {
+            (new AdminController())->approveReviewItem();
+            exit;
+        }
+        if ($apiPath === 'admin/review-queue/reject' && $method === 'POST') {
+            (new AdminController())->rejectReviewItem();
+            exit;
+        }
         if ($apiPath === 'admin/metrics' && $method === 'GET') {
             (new AdminController())->getDashboardMetrics();
             exit;
@@ -164,19 +239,19 @@ if (str_starts_with($requestUri, '/api/v1/')) {
             (new AdminController())->updateJobStatus();
             exit;
         }
-        if ($apiPath === 'admin/recruitments/get' && $method === 'GET') {
+        if (($apiPath === 'admin/recruitments/get' || $apiPath === 'admin/jobs/get') && $method === 'GET') {
             (new AdminController())->getJob();
             exit;
         }
-        if ($apiPath === 'admin/recruitments/create' && $method === 'POST') {
+        if (($apiPath === 'admin/recruitments/create' || $apiPath === 'admin/jobs/create') && $method === 'POST') {
             (new AdminController())->createJob();
             exit;
         }
-        if ($apiPath === 'admin/recruitments/update' && $method === 'POST') {
+        if (($apiPath === 'admin/recruitments/update' || $apiPath === 'admin/jobs/update') && $method === 'POST') {
             (new AdminController())->updateJob();
             exit;
         }
-        if ($apiPath === 'admin/recruitments/delete' && $method === 'POST') {
+        if (($apiPath === 'admin/recruitments/delete' || $apiPath === 'admin/jobs/delete') && $method === 'POST') {
             (new AdminController())->deleteJob();
             exit;
         }
@@ -240,12 +315,24 @@ if (str_starts_with($requestUri, '/api/v1/')) {
             (new AdminController())->updateEvent();
             exit;
         }
+        if ($apiPath === 'admin/events/update-status' && $method === 'POST') {
+            (new AdminController())->updateEventStatus();
+            exit;
+        }
         if ($apiPath === 'admin/events/delete' && $method === 'POST') {
             (new AdminController())->deleteEvent();
             exit;
         }
+        if ($apiPath === 'admin/cutoffs/get' && $method === 'GET') {
+            (new AdminController())->getCutoff();
+            exit;
+        }
         if ($apiPath === 'admin/cutoffs/create' && $method === 'POST') {
             (new AdminController())->createCutoff();
+            exit;
+        }
+        if ($apiPath === 'admin/cutoffs/update' && $method === 'POST') {
+            (new AdminController())->updateCutoff();
             exit;
         }
         if ($apiPath === 'admin/cutoffs/delete' && $method === 'POST') {
@@ -254,6 +341,10 @@ if (str_starts_with($requestUri, '/api/v1/')) {
         }
         if ($apiPath === 'admin/sources/create' && $method === 'POST') {
             (new AdminController())->createSource();
+            exit;
+        }
+        if ($apiPath === 'admin/sources/delete' && $method === 'POST') {
+            (new AdminController())->deleteSource();
             exit;
         }
     }

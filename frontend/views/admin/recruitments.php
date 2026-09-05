@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../backend/app/Database.php';
 use App\Database;
 
 $db = Database::getConnection();
+require_once __DIR__ . '/partials/admin_icons.php';
 
 // Filter & Search Parameters
 $search = trim($_GET['q'] ?? '');
@@ -37,7 +38,7 @@ $jobs = $stmt->fetchAll();
 $pageTitle = "Manage Recruitment Notices — Admin Control Center";
 $adminPageTitle = "Manage Jobs";
 $adminPageHeading = "Recruitment Gazettes & Public Notices Directory";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addJobModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Add New Job Notice</button>';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addJobModal\')" class="admin-btn admin-btn-primary admin-btn-sm">' . admin_icon('plus', '', 14) . ' Add New Job Notice</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -70,7 +71,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 
     <div style="display: flex; gap: 0.5rem;">
       <button type="submit" class="admin-btn admin-btn-primary admin-btn-sm">
-        Filter
+        <?= admin_icon('filter', '', 14) ?> Filter
       </button>
       <?php if (!empty($search) || !empty($category) || !empty($status)): ?>
         <a href="/admin/recruitments" class="admin-btn admin-btn-glass admin-btn-sm">
@@ -85,12 +86,12 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">Indexed Job Notifications</h3>
+      <h3 class="admin-card-title"><?= admin_icon('file-text', '', 18) ?> Indexed Job Notifications</h3>
       <p class="admin-card-desc">Showing <strong><?= count($jobs) ?></strong> active government recruitment notices</p>
     </div>
     <div>
       <button onclick="openModal('addJobModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-        + Add New Job Notice
+        <?= admin_icon('plus', '', 14) ?> Add New Job Notice
       </button>
     </div>
   </div>
@@ -160,13 +161,13 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <a href="/jobs/<?= htmlspecialchars($job['slug']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-icon-only" title="View Public Post">
-                  
+                  <?= admin_icon('eye', '', 15) ?>
                 </a>
                 <button onclick="editJob(<?= $job['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Job Details">
-                  
+                  <?= admin_icon('edit', '', 15) ?>
                 </button>
                 <button onclick="deleteJob(<?= $job['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Notification">
-                  
+                  <?= admin_icon('trash', '', 15) ?>
                 </button>
               </div>
             </td>
@@ -181,7 +182,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addJobModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">+ Add Official Job Notification</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('plus', '', 18) ?> Add Official Job Notification</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addJobModal')">&times;</button>
     </div>
 
@@ -298,7 +299,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editJobModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title"> Edit Job Notification</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('edit', '', 18) ?> Edit Job Notification</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editJobModal')">&times;</button>
     </div>
 

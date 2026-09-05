@@ -13,7 +13,7 @@ class SyncController {
     }
 
     private function validateInternalSecret(): void {
-        $expectedSecret = getenv('INTERNAL_API_SECRET') ?: 'gov_sec_sync_k9a2b8e4f1c7d3a5e8b0c2d4e6f8a0b2';
+        $expectedSecret = getenv('INTERNAL_API_SECRET') ?: ($_ENV['INTERNAL_API_SECRET'] ?? '');
         $providedSecret = $_SERVER['HTTP_X_INTERNAL_SECRET'] ?? '';
 
         if (empty($providedSecret) && isset($_SERVER['HTTP_AUTHORIZATION'])) {
@@ -23,7 +23,7 @@ class SyncController {
             }
         }
 
-        if ($providedSecret !== $expectedSecret) {
+        if (empty($expectedSecret) || empty($providedSecret) || !hash_equals($expectedSecret, $providedSecret)) {
             http_response_code(401);
             echo json_encode(['error' => 'Unauthorized: Invalid internal secret']);
             exit;

@@ -557,7 +557,7 @@ class JobArticleGenerator {
         <div style="background: var(--bg-subtle); border-left: 4px solid var(--emerald); padding: 1rem 1.25rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 1.5rem 0;">
           <strong style="color: var(--emerald); font-size: 0.95rem;">📚 Additional Exam Preparation Resources:</strong>
           <p style="font-size: 0.875rem; line-height: 1.7; color: var(--text-secondary); margin: 0.35rem 0 0;">
-            For continuous tracking of upcoming government exams, admit card release dates, and previous year question trends, aspirants can visit the <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Job Recruitment Portal</a> for timely notifications and updates.
+            For continuous tracking of upcoming government exams, admit card release dates, and previous year question trends, aspirants can rely on verified national recruitment portals for timely notifications and updates.
           </p>
         </div>';
 

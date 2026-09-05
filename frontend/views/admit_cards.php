@@ -54,11 +54,14 @@ require_once __DIR__ . '/partials/header.php';
     <p style="color: var(--text-secondary); font-size: 1rem; margin-top: 0.25rem;">
       Track live admit card releases, exam city intimation slips, and direct official download links.
     </p>
+  <!-- Hall Ticket Advisory & Verification Note (Backlink 1) -->
+  <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-left: 4px solid var(--primary-red); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+    <strong style="color: var(--text-primary);">📢 Candidate Advisory:</strong> E-admit cards and hall tickets must be downloaded prior to the reporting deadline. For authenticated examination schedules, syllabus weightage, and reporting instructions, refer to the <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Government Job Recruitment</a> portal.
   </div>
 
   <!-- Filter Bar -->
   <div class="filter-panel">
-    <form method="GET" action="/admit-cards" class="filter-grid" style="grid-template-columns: 2fr 1fr auto;">
+    <form method="GET" action="/admit-cards" class="filter-grid-3">
       <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Search by Exam, Commission, Post..." class="form-control">
       
       <select name="category" class="form-control">
@@ -72,18 +75,19 @@ require_once __DIR__ . '/partials/header.php';
       </select>
 
       <div style="display: flex; gap: 0.5rem;">
-        <button type="submit" class="btn btn-primary">Filter</button>
+        <button type="submit" class="btn btn-primary" style="flex: 1;"><?= app_icon('search', '', 14) ?> Filter</button>
         <?php if (!empty($search) || !empty($category)): ?>
-          <a href="/admit-cards" class="btn btn-glass">Reset</a>
+          <a href="/admit-cards" class="btn btn-glass" title="Reset Filters">✕</a>
         <?php endif; ?>
       </div>
     </form>
   </div>
 
-  <!-- Admit Cards Table -->
+  <!-- Admit Cards Table / Adaptive Cards -->
   <div class="content-box">
-    <div style="overflow-x: auto;">
-      <table class="data-table">
+    <div class="table-scroll-wrapper">
+      <div class="table-scroll-hint">Swipe sideways to view full columns &rarr;</div>
+      <table class="data-table responsive-adaptive-table">
         <thead>
           <tr>
             <th>Commission / Exam</th>
@@ -103,39 +107,75 @@ require_once __DIR__ . '/partials/header.php';
           <?php else: ?>
             <?php foreach ($events as $ev): ?>
               <?php
-                $isReleased = !empty($ev['event_date']) && strtotime($ev['event_date']) <= time();
+                $rawStatus = strtoupper(trim($ev['status'] ?? ''));
+                $now = time();
+                $eventTimestamp = !empty($ev['event_date']) ? strtotime($ev['event_date']) : null;
+                $isFuture = $eventTimestamp && $eventTimestamp > $now;
+                $isExpired = $eventTimestamp && $eventTimestamp < ($now - 14 * 86400); // 14 days past
+
+                if ($isExpired) {
+                    $statusBadgeClass = 'badge-closed';
+                    $statusLabel = '🔒 Exam Concluded';
+                    $btnLabel = 'Exam Concluded';
+                    $btnClass = 'btn btn-glass btn-sm';
+                } elseif ($rawStatus === 'RELEASED' && !$isFuture) {
+                    $statusBadgeClass = 'badge-active';
+                    $statusLabel = '✓ Available Now';
+                    $btnLabel = 'Download Hall Ticket &rarr;';
+                    $btnClass = 'btn btn-primary btn-sm';
+                } elseif ($ev['event_type'] === 'EXAM_DATE' || $rawStatus === 'SCHEDULED') {
+                    $statusBadgeClass = 'badge-org';
+                    $statusLabel = '📅 Exam Date Announced';
+                    $btnLabel = 'View Exam Schedule &nearr;';
+                    $btnClass = 'btn btn-glass btn-sm';
+                } elseif ($rawStatus === 'CITY_SLIP') {
+                    $statusBadgeClass = 'badge-org';
+                    $statusLabel = '🗺️ City Slip Out';
+                    $btnLabel = 'Check City Slip &nearr;';
+                    $btnClass = 'btn btn-primary btn-sm';
+                } elseif ($rawStatus === 'POSTPONED') {
+                    $statusBadgeClass = 'badge-closed';
+                    $statusLabel = '⚠️ Postponed';
+                    $btnLabel = 'Check Notice &nearr;';
+                    $btnClass = 'btn btn-glass btn-sm';
+                } else {
+                    // Future / Upcoming Admit Cards
+                    $statusBadgeClass = 'badge-urgent';
+                    $statusLabel = '⏳ Releasing Soon';
+                    $btnLabel = 'Official Portal &nearr;';
+                    $btnClass = 'btn btn-glass btn-sm';
+                }
+
                 $dateFormatted = !empty($ev['event_date']) ? date('d M Y (l)', strtotime($ev['event_date'])) : 'To Be Announced';
                 $downloadUrl = !empty($ev['reference_url']) ? $ev['reference_url'] : ($ev['official_apply_url'] ?? $ev['official_website_url']);
               ?>
               <tr>
-                <td>
-                  <span class="badge-org" style="font-size: 0.65rem; margin-right: 0.35rem;"><?= htmlspecialchars($ev['organization_name']) ?></span>
+                <td data-label="Commission / Exam">
+                  <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                    <span class="badge-org" style="font-size: 0.65rem;"><?= htmlspecialchars($ev['organization_name']) ?></span>
+                  </div>
                   <?php if (!empty($ev['recruitment_slug'])): ?>
-                    <a href="/jobs/<?= htmlspecialchars($ev['recruitment_slug']) ?>" style="font-weight: 700; color: var(--text-primary);">
+                    <a href="/jobs/<?= htmlspecialchars($ev['recruitment_slug']) ?>" style="font-weight: 700; color: var(--text-primary); display: block; margin-top: 0.2rem;">
                       <?= htmlspecialchars($ev['recruitment_title']) ?>
                     </a>
                   <?php else: ?>
-                    <strong style="color: var(--text-primary);"><?= htmlspecialchars($ev['event_title']) ?></strong>
+                    <strong style="color: var(--text-primary); display: block; margin-top: 0.2rem;"><?= htmlspecialchars($ev['event_title']) ?></strong>
                   <?php endif; ?>
                 </td>
-                <td>
+                <td data-label="Milestone Event">
                   <strong><?= htmlspecialchars($ev['event_title']) ?></strong>
                   <div style="font-size: 0.75rem; color: var(--text-muted);"><?= htmlspecialchars(str_replace('_', ' ', $ev['event_type'])) ?></div>
                 </td>
-                <td style="font-weight: 700; color: var(--text-primary);">
+                <td data-label="Release Date" style="font-weight: 700; color: var(--text-primary);">
                   <?= $dateFormatted ?>
                 </td>
-                <td>
-                  <?php if ($isReleased): ?>
-                    <span class="badge-active">Available Now</span>
-                  <?php else: ?>
-                    <span class="badge-urgent">⏳ Releasing Soon</span>
-                  <?php endif; ?>
+                <td data-label="Status">
+                  <span class="<?= $statusBadgeClass ?>"><?= $statusLabel ?></span>
                 </td>
-                <td>
+                <td data-label="Download Action">
                   <?php if (!empty($downloadUrl)): ?>
-                    <a href="<?= htmlspecialchars($downloadUrl) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
-                      Download Hall Ticket &rarr;
+                    <a href="<?= htmlspecialchars($downloadUrl) ?>" target="_blank" rel="noopener noreferrer" class="<?= $btnClass ?>" style="padding: 0.5rem 0.85rem; font-size: 0.825rem;">
+                      <?= $btnLabel ?>
                     </a>
                   <?php else: ?>
                     <span style="color: var(--text-muted); font-size: 0.8rem;">Notice Pending</span>
@@ -147,6 +187,16 @@ require_once __DIR__ . '/partials/header.php';
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- Hall Ticket Guidelines & Verification Desk (Backlink 2) -->
+  <div class="content-box" style="margin-top: 2rem; background: linear-gradient(135deg, #ffffff 0%, var(--bg-surface-elevated) 100%); border: 1px solid var(--border-subtle); padding: 1.5rem 2rem;">
+    <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+      🔍 Verification Protocol & City Intimation Discrepancies
+    </h3>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; margin: 0;">
+      Carefully verify your roll number, designated test shift, and center address on your hall ticket. In case of any anomaly in personal details or photograph, candidates should immediately report to the respective recruitment authority. Real-time hall ticket releases and exam updates across all central and state boards can be monitored on <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Job Recruitment India</a>.
+    </p>
   </div>
 
 </div>

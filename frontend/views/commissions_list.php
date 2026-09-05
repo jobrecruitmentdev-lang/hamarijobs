@@ -8,14 +8,14 @@ $db = Database::getConnection();
 $commissions = $db->query("SELECT * FROM commissions WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
 
 // Query active vacancies for each commission
-foreach ($commissions as &$comm) {
-    $filterKw = $comm['filter_keyword'] ?: $comm['short_name'];
+foreach ($commissions as $idx => $cItem) {
+    $filterKw = !empty($cItem['filter_keyword']) ? $cItem['filter_keyword'] : $cItem['short_name'];
     $stmt = $db->prepare("SELECT COUNT(*) as active_count, SUM(total_vacancies) as total_vac FROM recruitments WHERE (organization_name LIKE ? OR title LIKE ?) AND status = 'Active'");
     $stmt->execute(["%{$filterKw}%", "%{$filterKw}%"]);
     $row = $stmt->fetch();
-    $comm['active_openings'] = $row['active_count'] ?? 0;
-    $comm['vacancies_sum'] = $row['total_vac'] ?? 0;
-    $comm['short'] = $comm['short_name'];
+    $commissions[$idx]['active_openings'] = $row['active_count'] ?? 0;
+    $commissions[$idx]['vacancies_sum'] = $row['total_vac'] ?? 0;
+    $commissions[$idx]['short'] = $cItem['short_name'];
 }
 
 $pageTitle = "Government Recruiting Commissions Directory 2026 — UPSC, SSC, Railways, Banks & State PSCs";
@@ -38,14 +38,32 @@ require_once __DIR__ . '/partials/header.php';
     </p>
   </div>
 
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.75rem;">
+  <div class="job-grid">
     <?php foreach ($commissions as $comm): ?>
       <div class="content-box" style="display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
         <div>
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <div class="commission-icon" style="width: 44px; height: 44px; font-size: 1.25rem; margin: 0;">
-                <?= $comm['emblem'] ?>
+              <?php
+                $cIcon = 'landmark';
+                $cSlug = strtolower($comm['slug'] ?? '');
+                $cEmblem = trim($comm['emblem'] ?? '');
+                if (!empty($cEmblem) && preg_match('/^[a-z0-9-]+$/', $cEmblem)) {
+                    $cIcon = $cEmblem;
+                } elseif ($cSlug === 'ssc') {
+                    $cIcon = 'building-2';
+                } elseif ($cSlug === 'railways') {
+                    $cIcon = 'train';
+                } elseif ($cSlug === 'banking') {
+                    $cIcon = 'bank';
+                } elseif ($cSlug === 'defence') {
+                    $cIcon = 'plane';
+                } elseif ($cSlug === 'state-psc') {
+                    $cIcon = 'building';
+                }
+              ?>
+              <div class="commission-icon" style="width: 44px; height: 44px; margin: 0; display: flex; align-items: center; justify-content: center;">
+                <?= app_icon($cIcon, '', 22) ?>
               </div>
               <div>
                 <span class="badge-org" style="font-size: 0.7rem;"><?= htmlspecialchars($comm['short']) ?></span>

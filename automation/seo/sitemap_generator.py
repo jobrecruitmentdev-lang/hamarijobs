@@ -153,7 +153,45 @@ class SitemapAndSEOEngine:
                 logger.warning(f"⚠️ [IndexNow] Response HTTP {res.status_code}: {res.text}")
                 return False
         except Exception as e:
-            logger.error(f"❌ [IndexNow] Submission error: {e}")
+            logger.warning(f"⚠️ [IndexNow] Submission failed: {e}")
+            return False
+
+    def submit_to_google_indexing(self, urls: List[str]) -> bool:
+        """
+        Dispatches instant crawl notifications to Google Search via Google Indexing API.
+        Requires service account JSON configured in GOOGLE_SERVICE_ACCOUNT_JSON or storage/.
+        """
+        if not urls:
+            return True
+
+        sa_path = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", os.path.join(ROOT_DIR, "storage", "google_service_account.json"))
+        if not os.path.exists(sa_path):
+            logger.info("ℹ️ [GoogleIndexing] Engine Ready. Place 'google_service_account.json' in storage/ to dispatch direct Googlebot pings.")
+            return False
+
+        try:
+            logger.info(f"🚀 [GoogleIndexing] Submitting {len(urls)} URLs to Google Search Indexing API...")
+            # If google-auth is installed, run OAuth2 JWT assertion
+            from google.oauth2 import service_account
+            from googleapiclient.discovery import build
+
+            credentials = service_account.Credentials.from_service_account_file(
+                sa_path,
+                scopes=["https://www.googleapis.com/auth/indexing"]
+            )
+            service = build("indexing", "v3", credentials=credentials)
+
+            for u in urls[:100]:
+                content = {"url": u, "type": "URL_UPDATED"}
+                service.urlNotifications().publish(body=content).execute()
+            
+            logger.info(f"✅ [GoogleIndexing] Successfully submitted {len(urls)} URLs to Google Indexing API.")
+            return True
+        except ImportError:
+            logger.info("ℹ️ [GoogleIndexing] 'google-auth' package optional. Install via requirements if Google service account is provided.")
+            return False
+        except Exception as e:
+            logger.warning(f"⚠️ [GoogleIndexing] Dispatch notification: {e}")
             return False
 
 if __name__ == "__main__":

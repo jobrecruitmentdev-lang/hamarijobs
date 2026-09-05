@@ -14,7 +14,7 @@ $jobStmt = $db->query("
            (SELECT claimed_value FROM fact_claims WHERE entity_type = 'Recruitment' AND entity_id = r.id AND field_name = 'Application Fee' LIMIT 1) as fee_details,
            (SELECT claimed_value FROM fact_claims WHERE entity_type = 'Recruitment' AND entity_id = r.id AND field_name = 'Age Limit' LIMIT 1) as age_limit
     FROM recruitments r
-    WHERE r.status = 'Active' 
+    WHERE r.status IN ('Active', 'Upcoming', 'Exam_Phase', 'Result_Declared') 
     ORDER BY r.updated_at DESC 
     LIMIT 6
 ");
@@ -36,6 +36,17 @@ $artStmt = $db->query("
     LIMIT 3
 ");
 $articles = $artStmt->fetchAll();
+
+// Fetch Active Commissions for Homepage Grid
+$commStmt = $db->query("
+    SELECT c.*,
+           (SELECT COUNT(*) FROM recruitments WHERE (organization_name LIKE CONCAT('%', COALESCE(NULLIF(c.filter_keyword,''), c.short_name), '%') OR title LIKE CONCAT('%', COALESCE(NULLIF(c.filter_keyword,''), c.short_name), '%')) AND status = 'Active') as active_count
+    FROM commissions c
+    WHERE c.is_active = 1
+    ORDER BY c.id ASC
+    LIMIT 12
+");
+$homepageCommissions = $commStmt->fetchAll();
 
 // Stats counts
 $jobCount = $db->query("SELECT COUNT(*) FROM recruitments WHERE status = 'Active'")->fetchColumn() ?: 6;
@@ -235,41 +246,36 @@ require_once __DIR__ . '/partials/header.php';
     </div>
 
     <div class="commissions-grid">
-      <a href="/commissions/upsc" class="commission-card">
-        <div class="commission-icon"></div>
-        <div class="commission-name">UPSC</div>
-        <div class="commission-count">Civil & Defence Cadres</div>
-      </a>
-
-      <a href="/commissions/ssc" class="commission-card">
-        <div class="commission-icon"></div>
-        <div class="commission-name">SSC</div>
-        <div class="commission-count">CGL, CHSL, CPO, MTS</div>
-      </a>
-
-      <a href="/commissions/railways" class="commission-card">
-        <div class="commission-icon"></div>
-        <div class="commission-name">Railways (RRB)</div>
-        <div class="commission-count">NTPC, Group D, ALP</div>
-      </a>
-
-      <a href="/commissions/banking" class="commission-card">
-        <div class="commission-icon"></div>
-        <div class="commission-name">Banking (IBPS/SBI)</div>
-        <div class="commission-count">PO, Clerk, Specialist</div>
-      </a>
-
-      <a href="/commissions/defence" class="commission-card">
-        <div class="commission-icon"></div>
-        <div class="commission-name">Defence & IAF</div>
-        <div class="commission-count">AFCAT, NDA, CDS</div>
-      </a>
-
-      <a href="/commissions/state-psc" class="commission-card">
-        <div class="commission-icon"></div>
-        <div class="commission-name">State PSCs</div>
-        <div class="commission-count">GPSC, UPPSC, MPSC</div>
-      </a>
+      <?php foreach ($homepageCommissions as $comm): ?>
+        <?php
+          $iconName = 'landmark';
+          $slug = strtolower($comm['slug'] ?? '');
+          $emblem = trim($comm['emblem'] ?? '');
+          if (!empty($emblem) && preg_match('/^[a-z0-9-]+$/', $emblem)) {
+              $iconName = $emblem;
+          } elseif ($slug === 'ssc') {
+              $iconName = 'building-2';
+          } elseif ($slug === 'railways') {
+              $iconName = 'train';
+          } elseif ($slug === 'banking') {
+              $iconName = 'bank';
+          } elseif ($slug === 'defence') {
+              $iconName = 'plane';
+          } elseif ($slug === 'state-psc') {
+              $iconName = 'building';
+          }
+          if (!empty($comm['annual_candidates'])) {
+              $countText = htmlspecialchars($comm['annual_candidates']);
+          } else {
+              $countText = ($comm['active_count'] ?? 0) . ' Active Notices';
+          }
+        ?>
+        <a href="/commissions/<?= htmlspecialchars($comm['slug']) ?>" class="commission-card">
+          <div class="commission-icon"><?= app_icon($iconName, '', 28) ?></div>
+          <div class="commission-name"><?= htmlspecialchars($comm['short_name'] ?: $comm['name']) ?></div>
+          <div class="commission-count"><?= $countText ?></div>
+        </a>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
@@ -296,12 +302,26 @@ require_once __DIR__ . '/partials/header.php';
           $startDateStr = !empty($job['start_date']) ? date('d M Y', strtotime($job['start_date'])) : 'As per Notice';
           $lastDateStr = !empty($job['last_date']) ? date('d M Y', strtotime($job['last_date'])) : 'Open Notice';
           
+          $jStatus = $job['status'] ?? 'Active';
           $urgencyBadge = 'Active Opening';
           $urgencyClass = 'badge-active';
-          if (!empty($job['last_date'])) {
+
+          if ($jStatus === 'Upcoming') {
+              $urgencyBadge = '⏳ Upcoming Notice';
+              $urgencyClass = 'badge-upcoming';
+          } elseif ($jStatus === 'Exam_Phase') {
+              $urgencyBadge = '📝 Exam Phase Active';
+              $urgencyClass = 'badge-exam';
+          } elseif ($jStatus === 'Result_Declared') {
+              $urgencyBadge = '🏆 Result Declared';
+              $urgencyClass = 'badge-result';
+          } elseif ($jStatus === 'Archived') {
+              $urgencyBadge = '📁 Archived Notice';
+              $urgencyClass = 'badge-closed';
+          } elseif (!empty($job['last_date'])) {
               $diffDays = ceil((strtotime($job['last_date']) - time()) / 86400);
               if ($diffDays < 0) {
-                  $urgencyBadge = '⌛ Registration Closed';
+                  $urgencyBadge = 'Registration Closed';
                   $urgencyClass = 'badge-closed';
               } elseif ($diffDays <= 7) {
                   $urgencyBadge = "Ending Soon ({$diffDays} Days Left)";
@@ -335,42 +355,42 @@ require_once __DIR__ . '/partials/header.php';
             <!-- 6-Cell Data Matrix (Exhaustive & Error-Free) -->
             <div class="job-metrics-matrix">
               <div class="metric-cell">
-                <span class="metric-cell-label">Vacancies</span>
+                <span class="metric-cell-label"><?= app_icon('users', '', 12) ?> Vacancies</span>
                 <span class="metric-cell-val" style="color: var(--primary-red); font-weight: 800;" title="<?= $job['total_vacancies'] ? number_format($job['total_vacancies']) . ' Posts' : 'As per Notice' ?>">
                   <?= $job['total_vacancies'] ? number_format($job['total_vacancies']) . ' Posts' : 'As per Notice' ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">Qualification</span>
+                <span class="metric-cell-label"><?= app_icon('graduation-cap', '', 12) ?> Qualification</span>
                 <span class="metric-cell-val" title="<?= htmlspecialchars($job['qualification_level'] ?: 'Graduate Degree') ?>">
                   <?= htmlspecialchars($job['qualification_level'] ?: 'Graduate Degree') ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">Pay Scale</span>
+                <span class="metric-cell-label"><?= app_icon('banknote', '', 12) ?> Pay Scale</span>
                 <span class="metric-cell-val" style="color: var(--emerald);" title="<?= htmlspecialchars($job['pay_scale'] ?: '7th CPC Matrix') ?>">
                   <?= htmlspecialchars($job['pay_scale'] ?: '7th CPC Matrix') ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">Age Limit</span>
+                <span class="metric-cell-label"><?= app_icon('cake', '', 12) ?> Age Limit</span>
                 <span class="metric-cell-val" title="<?= htmlspecialchars($job['age_limit'] ?: '18 - 32 Years') ?>">
                   <?= htmlspecialchars($job['age_limit'] ?: '18 - 32 Years') ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">Application Fee</span>
+                <span class="metric-cell-label"><?= app_icon('credit-card', '', 12) ?> Application Fee</span>
                 <span class="metric-cell-val" title="<?= htmlspecialchars($job['fee_details'] ?: 'Gen: ₹100 / SC: ₹0') ?>">
                   <?= htmlspecialchars($job['fee_details'] ?: 'Gen: ₹100 / SC: ₹0') ?>
                 </span>
               </div>
 
               <div class="metric-cell">
-                <span class="metric-cell-label">Cadre / Region</span>
+                <span class="metric-cell-label"><?= app_icon('map-pin', '', 12) ?> Cadre / Region</span>
                 <span class="metric-cell-val" title="<?= htmlspecialchars($job['state_code'] === 'ALL' ? 'All India' : $job['state_code']) ?>">
                   <?= htmlspecialchars($job['state_code'] === 'ALL' ? 'All India' : $job['state_code']) ?>
                 </span>
@@ -380,7 +400,7 @@ require_once __DIR__ . '/partials/header.php';
             <!-- Important Dates Row -->
             <div class="job-dates-row">
               <div class="job-dates-header">
-                <span class="job-dates-label">Application Window</span>
+                <span class="job-dates-label"><?= app_icon('calendar', '', 12) ?> Application Window</span>
                 <span class="<?= $urgencyClass ?>"><?= $urgencyBadge ?></span>
               </div>
               <div class="job-dates-val">
@@ -401,13 +421,13 @@ require_once __DIR__ . '/partials/header.php';
               <div class="job-card-secondary-actions">
                 <?php if (!empty($job['official_apply_url'])): ?>
                   <a href="<?= htmlspecialchars($job['official_apply_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-card-sub">
-                    Apply Online
+                    <?= app_icon('external-link', '', 13) ?> Apply Online
                   </a>
                 <?php endif; ?>
 
                 <?php if (!empty($job['primary_notification_url'])): ?>
                   <a href="<?= htmlspecialchars($job['primary_notification_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-glass btn-card-sub" title="Download Official PDF Notice">
-                    Official PDF
+                    <?= app_icon('download', '', 13) ?> Official PDF
                   </a>
                 <?php endif; ?>
               </div>
@@ -482,7 +502,7 @@ require_once __DIR__ . '/partials/header.php';
       <a href="/articles" class="btn btn-outline btn-sm">View All Guides (<?= count($articles) ?> Articles) &rarr;</a>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.75rem;">
+    <div class="job-grid">
       <?php foreach ($articles as $art): ?>
         <div class="job-card">
           <div>

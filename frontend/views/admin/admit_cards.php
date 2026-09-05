@@ -24,7 +24,8 @@ $recruitmentsList = $db->query("
 $pageTitle = "Manage Admit Cards & Exam Dates — Admin Control Center";
 $adminPageTitle = "Admit Cards";
 $adminPageHeading = "Admit Cards, Hall Tickets & Exam Schedule Intelligence";
-$adminHeaderActionHtml = '<button onclick="openModal(\'addEventModal\')" class="admin-btn admin-btn-primary admin-btn-sm">+ Create Admit Card Notice</button>';
+require_once __DIR__ . '/partials/admin_icons.php';
+$adminHeaderActionHtml = '<button onclick="openModal(\'addEventModal\')" class="admin-btn admin-btn-primary admin-btn-sm">' . admin_icon('plus', '', 14) . ' Create Admit Card Notice</button>';
 
 require_once __DIR__ . '/partials/admin_layout_top.php';
 ?>
@@ -34,7 +35,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Total Notices</span>
-      <div class="admin-kpi-icon ruby"></div>
+      <div class="admin-kpi-icon ruby"><?= admin_icon('ticket', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--primary-ruby);"><?= number_format(count($events)) ?></div>
     <div class="admin-kpi-subtext">
@@ -45,7 +46,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Live Admit Cards</span>
-      <div class="admin-kpi-icon emerald"></div>
+      <div class="admin-kpi-icon emerald"><?= admin_icon('zap', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-emerald);"><?= number_format(count(array_filter($events, fn($e) => $e['event_type'] === 'ADMIT_CARD_RELEASED'))) ?></div>
     <div class="admin-kpi-subtext">
@@ -56,7 +57,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
   <div class="admin-kpi-card">
     <div class="admin-kpi-header">
       <span class="admin-kpi-label">Exam Dates Notified</span>
-      <div class="admin-kpi-icon blue">📅</div>
+      <div class="admin-kpi-icon blue"><?= admin_icon('calendar', '', 18) ?></div>
     </div>
     <div class="admin-kpi-value" style="color: var(--color-blue);"><?= number_format(count(array_filter($events, fn($e) => $e['event_type'] === 'EXAM_DATE'))) ?></div>
     <div class="admin-kpi-subtext">
@@ -69,11 +70,11 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div class="admin-card">
   <div class="admin-card-header">
     <div class="admin-card-title-wrap">
-      <h3 class="admin-card-title">Official Admit Cards & Hall Tickets Tracker</h3>
+      <h3 class="admin-card-title"><?= admin_icon('ticket', '', 18) ?> Official Admit Cards & Hall Tickets Tracker</h3>
       <p class="admin-card-desc">Showing <strong><?= count($events) ?></strong> published hall tickets and exam schedules across national recruiting agencies</p>
     </div>
     <button onclick="openModal('addEventModal')" class="admin-btn admin-btn-primary admin-btn-sm">
-      + Create Admit Card Notice
+      <?= admin_icon('plus', '', 14) ?> Create Admit Card Notice
     </button>
   </div>
 
@@ -86,6 +87,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <th>Organization / Recruitment</th>
           <th>Notice Type</th>
           <th>Release / Exam Date</th>
+          <th>Live Status</th>
           <th>Official Link</th>
           <th style="text-align: right;">Actions</th>
         </tr>
@@ -151,6 +153,15 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
               <?php endif; ?>
             </td>
             <td>
+              <?php $evStatus = strtoupper(trim($ev['status'] ?? 'RELEASED')); ?>
+              <select class="admin-form-control event-status-select" data-event-id="<?= $ev['id'] ?>" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; width: 145px; font-weight: 700;">
+                <option value="RELEASED" <?= $evStatus === 'RELEASED' ? 'selected' : '' ?>>✓ Available Now</option>
+                <option value="EXPECTED" <?= $evStatus === 'EXPECTED' ? 'selected' : '' ?>>⏳ Releasing Soon</option>
+                <option value="CITY_SLIP" <?= $evStatus === 'CITY_SLIP' ? 'selected' : '' ?>>🗺️ City Slip Out</option>
+                <option value="POSTPONED" <?= $evStatus === 'POSTPONED' ? 'selected' : '' ?>>⚠️ Postponed</option>
+              </select>
+            </td>
+            <td>
               <?php if (!empty($ev['reference_url'])): ?>
                 <a href="<?= htmlspecialchars($ev['reference_url']) ?>" target="_blank" class="admin-btn admin-btn-glass admin-btn-sm" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
                   Portal ↗
@@ -162,10 +173,10 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
             <td style="text-align: right;">
               <div class="admin-action-btn-group" style="justify-content: flex-end;">
                 <button onclick="editEvent(<?= $ev['id'] ?>)" class="admin-btn admin-btn-glass admin-btn-icon-only" title="Edit Event Notice">
-                  
+                  <?= admin_icon('edit', '', 15) ?>
                 </button>
-                <button onclick="deleteEvent(<?= $ev['id'] ?>, '<?= htmlspecialchars(addslashes($ev['event_title'])) ?>')" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Notice">
-                  
+                <button onclick="deleteEvent(<?= $ev['id'] ?>)" class="admin-btn admin-btn-danger admin-btn-icon-only" title="Delete Notice">
+                  <?= admin_icon('trash', '', 15) ?>
                 </button>
               </div>
             </td>
@@ -180,7 +191,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="addEventModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title">+ Publish Admit Card or Exam Notice</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('plus', '', 18) ?> Publish Admit Card or Exam Notice</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('addEventModal')">&times;</button>
     </div>
 
@@ -197,9 +208,9 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           <div class="admin-form-group">
             <label class="admin-form-label">Notice Type *</label>
             <select name="event_type" required class="admin-form-control">
-              <option value="ADMIT_CARD_RELEASED">ADMIT_CARD_RELEASED</option>
-              <option value="EXAM_DATE">📅 EXAM_DATE</option>
-              <option value="CORRECTION_WINDOW_OPENED"> CORRECTION_WINDOW_OPENED</option>
+              <option value="ADMIT_CARD_RELEASED">Admit Card Released</option>
+              <option value="EXAM_DATE">Exam Date Notified</option>
+              <option value="CORRECTION_WINDOW_OPENED">Correction Window Opened</option>
             </select>
           </div>
         </div>
@@ -224,11 +235,21 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           </div>
         </div>
 
-        <div class="admin-form-section-title">3. DATES & DOWNLOAD LINKS</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+        <div class="admin-form-section-title">3. DATES, STATUS & DOWNLOAD LINKS</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
           <div class="admin-form-group">
             <label class="admin-form-label">Event Date *</label>
             <input type="date" name="event_date" value="<?= date('Y-m-d') ?>" required class="admin-form-control">
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Live Status *</label>
+            <select name="status" class="admin-form-control" required>
+              <option value="RELEASED">✓ Available Now</option>
+              <option value="EXPECTED">⏳ Releasing Soon</option>
+              <option value="CITY_SLIP">🗺️ Exam City Intimation Slip</option>
+              <option value="POSTPONED">⚠️ Postponed / Delayed</option>
+            </select>
           </div>
 
           <div class="admin-form-group">
@@ -240,7 +261,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           </div>
 
           <div class="admin-form-group">
-            <label class="admin-form-label">Official Download Portal Link</label>
+            <label class="admin-form-label">Download Portal Link</label>
             <input type="url" name="reference_url" placeholder="https://ssc.gov.in" class="admin-form-control">
           </div>
 
@@ -254,7 +275,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 
       <div class="admin-modal-footer">
         <button type="button" class="admin-btn admin-btn-glass" onclick="closeModal('addEventModal')">Cancel</button>
-        <button type="submit" id="saveEventBtn" class="admin-btn admin-btn-primary">💾 Publish Admit Card Notice</button>
+        <button type="submit" id="saveEventBtn" class="admin-btn admin-btn-primary"><?= admin_icon('check', '', 14) ?> Publish Admit Card Notice</button>
       </div>
     </form>
   </div>
@@ -264,7 +285,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
 <div id="editEventModal" class="admin-modal-overlay">
   <div class="admin-modal-card">
     <div class="admin-modal-header">
-      <h3 class="admin-modal-title"> Edit Admit Card / Exam Notice</h3>
+      <h3 class="admin-modal-title"><?= admin_icon('edit', '', 18) ?> Edit Admit Card / Exam Notice</h3>
       <button class="admin-modal-close-btn" onclick="closeModal('editEventModal')">&times;</button>
     </div>
 
@@ -310,11 +331,21 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           </div>
         </div>
 
-        <div class="admin-form-section-title">3. DATES & LINKS</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+        <div class="admin-form-section-title">3. DATES, STATUS & LINKS</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
           <div class="admin-form-group">
             <label class="admin-form-label">Event Date</label>
             <input type="date" name="event_date" id="edit_event_date" required class="admin-form-control">
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Live Status</label>
+            <select name="status" id="edit_event_status" class="admin-form-control">
+              <option value="RELEASED">✓ Available Now</option>
+              <option value="EXPECTED">⏳ Releasing Soon</option>
+              <option value="CITY_SLIP">🗺️ Exam City Intimation Slip</option>
+              <option value="POSTPONED">⚠️ Postponed / Delayed</option>
+            </select>
           </div>
 
           <div class="admin-form-group">
@@ -326,7 +357,7 @@ require_once __DIR__ . '/partials/admin_layout_top.php';
           </div>
 
           <div class="admin-form-group">
-            <label class="admin-form-label">Official Download Portal Link</label>
+            <label class="admin-form-label">Portal Download Link</label>
             <input type="url" name="reference_url" id="edit_event_reference_url" class="admin-form-control">
           </div>
 
@@ -412,6 +443,7 @@ async function editEvent(id) {
     document.getElementById('edit_event_id').value = ev.id;
     document.getElementById('edit_event_title').value = ev.event_title || '';
     document.getElementById('edit_event_type').value = ev.event_type || 'ADMIT_CARD_RELEASED';
+    document.getElementById('edit_event_status').value = ev.status || 'RELEASED';
     document.getElementById('edit_event_rec_id').value = ev.recruitment_id || '';
     document.getElementById('edit_event_org_name').value = ev.organization_name || ev.rec_org_name || '';
     document.getElementById('edit_event_date').value = ev.event_date || '';
@@ -458,8 +490,8 @@ document.getElementById('editEventForm')?.addEventListener('submit', async funct
 });
 
 // Delete Event
-async function deleteEvent(id, title) {
-  if (!confirm(`Are you sure you want to delete "${title}"?`)) {
+async function deleteEvent(id) {
+  if (!confirm(`Are you sure you want to delete Event Notice #${id}? This action cannot be undone.`)) {
     return;
   }
 
@@ -473,15 +505,49 @@ async function deleteEvent(id, title) {
 
     if (data.success) {
       const row = document.getElementById(`event-row-${id}`);
-      if (row) row.remove();
-      alert('✓ ' + data.message);
+      if (row) {
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 250);
+      }
+      alert(data.message || 'Notice deleted successfully!');
     } else {
-      alert('❌ Error: ' + (data.error || 'Failed to delete event'));
+      alert('Error: ' + (data.error || 'Failed to delete event'));
     }
   } catch (err) {
-    alert('❌ Connection failed: ' + err.message);
+    alert('Connection failed: ' + err.message);
   }
 }
+
+// Live Inline Status Auto-Save for Admit Cards Table
+document.querySelectorAll('.event-status-select').forEach(select => {
+  select.addEventListener('change', async () => {
+    const eventId = select.getAttribute('data-event-id');
+    const status = select.value;
+    select.disabled = true;
+    try {
+      const res = await fetch('/api/v1/admin/events/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: eventId, status: status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        select.style.borderColor = '#059669';
+        select.style.background = '#ecfdf5';
+        setTimeout(() => {
+          select.style.borderColor = '';
+          select.style.background = '';
+        }, 1500);
+      } else {
+        alert('❌ ' + (data.error || 'Failed to update status.'));
+      }
+    } catch (err) {
+      alert('❌ Network error while updating event status.');
+    } finally {
+      select.disabled = false;
+    }
+  });
+});
 </script>
 
 <?php require_once __DIR__ . '/partials/admin_layout_bottom.php'; ?>
