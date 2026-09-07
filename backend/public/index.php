@@ -54,6 +54,13 @@ if (file_exists($staticCandidate) && !is_dir($staticCandidate)) {
 }
 
 // Check inside frontend/public
+$frontendPublicCandidate = $rootDir . '/frontend/public' . $requestUri;
+if (file_exists($frontendPublicCandidate) && !is_dir($frontendPublicCandidate)) {
+    serveStaticFile($frontendPublicCandidate);
+    exit;
+}
+
+// Check inside project root (e.g. root files like verification files)
 $frontendCandidate = $rootDir . $requestUri;
 if (file_exists($frontendCandidate) && !is_dir($frontendCandidate)) {
     serveStaticFile($frontendCandidate);
@@ -73,6 +80,9 @@ if (str_starts_with($requestUri, '/assets/')) {
 function serveStaticFile(string $filePath): void {
     $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
     $mimes = [
+        'html'  => 'text/html; charset=UTF-8',
+        'htm'   => 'text/html; charset=UTF-8',
+        'txt'   => 'text/plain; charset=UTF-8',
         'css'   => 'text/css; charset=UTF-8',
         'js'    => 'application/javascript; charset=UTF-8',
         'json'  => 'application/json; charset=UTF-8',

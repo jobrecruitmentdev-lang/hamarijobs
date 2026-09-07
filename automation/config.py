@@ -8,7 +8,8 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 class AutomationSettings:
     APP_ENV: str = os.getenv("APP_ENV", "development")
     APP_DEBUG: bool = os.getenv("APP_DEBUG", "true").lower() == "true"
-    APP_URL: str = os.getenv("APP_URL", "http://localhost:8080")
+    APP_URL: str = os.getenv("APP_URL", "https://hamarijobs.com")
+    SYNC_TARGET: str = os.getenv("SYNC_TARGET", "LIVE")
     API_V1_STR: str = os.getenv("API_V1_STR", "/api/v1")
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "Government Recruitment Intelligence Platform")
     

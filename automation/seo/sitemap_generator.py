@@ -28,20 +28,27 @@ class SitemapAndSEOEngine:
         self.base_url = settings.APP_URL.rstrip("/")
         
     def get_db_connection(self):
-        return pymysql.connect(
-            host=settings.MYSQL_HOST,
-            user=settings.MYSQL_USER,
-            password=settings.MYSQL_PASSWORD,
-            database=settings.MYSQL_DB,
-            cursorclass=pymysql.cursors.DictCursor,
-            autocommit=True
-        )
+        try:
+            return pymysql.connect(
+                host=settings.MYSQL_HOST,
+                user=settings.MYSQL_USER,
+                password=settings.MYSQL_PASSWORD,
+                database=settings.MYSQL_DB,
+                cursorclass=pymysql.cursors.DictCursor,
+                autocommit=True
+            )
+        except Exception:
+            return None
 
     def generate_all_sitemaps(self) -> Dict[str, str]:
         """
         Builds sitemap-jobs.xml, sitemap-exams.xml, sitemap-articles.xml, and sitemap-index.xml.
         """
         conn = self.get_db_connection()
+        if not conn:
+            logger.info("ℹ️ [Sitemap] Local DB offline, skipping local XML sitemap file regeneration.")
+            return {}
+
         cur = conn.cursor()
 
         # 1. Jobs Sitemap

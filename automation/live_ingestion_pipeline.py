@@ -22,16 +22,23 @@ from automation.intelligence.exam_engine import ExamIntelligenceEngine
 from automation.seo.sitemap_generator import SitemapAndSEOEngine
 from automation.intelligence.verification import FactVerificationShield
 from automation.scrapers.hash_detector import NoticeHashDetector
+from automation.publisher.api_client import PublisherAPI
 
 def get_db():
-    return pymysql.connect(
-        host=settings.MYSQL_HOST,
-        user=settings.MYSQL_USER,
-        password=settings.MYSQL_PASSWORD,
-        database=settings.MYSQL_DB,
-        cursorclass=pymysql.cursors.DictCursor,
-        autocommit=True
-    )
+    try:
+        return pymysql.connect(
+            host=settings.MYSQL_HOST,
+            user=settings.MYSQL_USER,
+            password=settings.MYSQL_PASSWORD,
+            database=settings.MYSQL_DB,
+            cursorclass=pymysql.cursors.DictCursor,
+            autocommit=True
+        )
+    except Exception as e:
+        if getattr(settings, "SYNC_TARGET", "LOCAL") == "LIVE":
+            logger.info(f"ℹ️ [Local DB Offline] SYNC_TARGET is set to LIVE. Operating in Cloud HTTPS Push mode to {settings.APP_URL}...")
+            return None
+        raise e
 
 REAL_OFFICIAL_GAZETTES = [
     # 1. UPSC CSE
@@ -894,17 +901,18 @@ def run_live_ingestion(trigger_source: str = "MANUAL_ADMIN"):
     logger.info("==================================================================")
 
     conn = get_db()
-    cur = conn.cursor()
+    cur = conn.cursor() if conn else None
     
-    # 1. Clean old mock seeds
-    purge_mock_and_demo_data(conn)
+    if conn:
+        # 1. Clean old mock seeds
+        purge_mock_and_demo_data(conn)
 
-    # 2. Seed All Official Commissions (UPSC, SSC, RRB, IBPS, SBI, Defence, GPSC, UPPSC, BPSC, MPPSC, RPSC, RPF, DRDO)
-    seed_all_official_commissions(cur)
+        # 2. Seed All Official Commissions
+        seed_all_official_commissions(cur)
 
-    # 3. Seed Master Exam Hubs (Syllabus, Pattern, Historical Cutoffs across 14 exams)
-    exam_engine = ExamIntelligenceEngine()
-    exam_engine.seed_master_exam_hubs()
+        # 3. Seed Master Exam Hubs
+        exam_engine = ExamIntelligenceEngine()
+        exam_engine.seed_master_exam_hubs()
 
     # 4. AI Extraction & Persistence with Hash Detector & Verification Shield
     extractor = LLMExtractor()
@@ -912,16 +920,20 @@ def run_live_ingestion(trigger_source: str = "MANUAL_ADMIN"):
 
     t_start = time.time()
     run_uuid = str(uuid.uuid4())
-    cur.execute("""
-        INSERT INTO automation_runs (run_uuid, stage_name, trigger_source, status, started_at)
-        VALUES (%s, 'LIVE_INGESTION', %s, 'RUNNING', NOW());
-    """, (run_uuid, trigger_source))
-    conn.commit()
+    if cur:
+        cur.execute("""
+            INSERT INTO automation_runs (run_uuid, stage_name, trigger_source, status, started_at)
+            VALUES (%s, 'LIVE_INGESTION', %s, 'RUNNING', NOW());
+        """, (run_uuid, trigger_source))
+        conn.commit()
 
     ingested_recruitment_ids = []
     new_ingested = 0
     skipped_unchanged = 0
     quarantined_count = 0
+
+    live_payload_recruitments = []
+    live_payload_jobs = []
 
     for item in REAL_OFFICIAL_GAZETTES:
         meta = item["meta"]
@@ -936,12 +948,14 @@ def run_live_ingestion(trigger_source: str = "MANUAL_ADMIN"):
         safe_slug = re.sub(r'[^a-zA-Z0-9]+', '-', f"{org}-{title}-2026").strip('-').lower()
         
         # Check if already exists in database
-        cur.execute("SELECT id FROM recruitments WHERE slug = %s LIMIT 1;", (safe_slug,))
-        existing = cur.fetchone()
+        existing = None
+        if cur:
+            cur.execute("SELECT id FROM recruitments WHERE slug = %s LIMIT 1;", (safe_slug,))
+            existing = cur.fetchone()
 
         # Check cryptographic hash: Has content changed or is it identical?
         has_changed = hash_detector.has_content_changed(domain, pdf_url, doc_hash)
-        if not has_changed and existing:
+        if not has_changed and existing and cur:
             logger.info(f"⏭️ [HashDetector] Unchanged Gazette for {org} - {title}. Syncing authentic schedule & milestone events.")
             rec_id = existing["id"]
             skipped_unchanged += 1
@@ -986,112 +1000,168 @@ def run_live_ingestion(trigger_source: str = "MANUAL_ADMIN"):
         sql_start = normalize_sql_date(d_start)
         sql_end = normalize_sql_date(d_end)
 
-        if not existing:
-            # Insert into recruitments
-            cur.execute("""
-                INSERT INTO recruitments (
-                    recruitment_uuid, title, slug, organization_name, advertisement_number,
-                    notification_number, year, total_vacancies, status, review_status, anomaly_flags,
-                    primary_notification_url, official_website_url, official_apply_url,
-                    state_code, qualification_level, summary, is_verified, verified_at,
-                    created_at, updated_at
-                ) VALUES (
-                    %s, %s, %s, %s, %s,
-                    %s, 2026, %s, %s, %s, %s,
-                    %s, %s, %s,
-                    %s, %s, %s, 1, NOW(),
-                    NOW(), NOW()
-                );
-            """, (
-                rec_uuid, title, safe_slug, org, meta.get("advt_no", "2026/01"),
-                meta.get("advt_no", "2026/01"), vacancies, rec_status, review_status, anomaly_str,
-                meta["pdf_url"], f"https://{meta['domain']}", meta["apply_url"],
-                meta.get("state_code", "ALL"), qual,
-                f"Official Government Notification for {title} by {org}. Total Vacancies: {vacancies}. Pay scale: {pay_text}. Age limit: {age_summary}."
-            ))
-            rec_id = cur.lastrowid
-            logger.info(f"✅ Ingested Recruitment #{rec_id}: {title} ({vacancies} vacancies, Review: {review_status})")
-            new_ingested += 1
+        # Aggregate payload for live HTTPS push
+        live_payload_recruitments.append({
+            "title": title,
+            "org": org,
+            "organization_name": org,
+            "slug": safe_slug,
+            "advertisement_number": meta.get("advt_no", "2026/01"),
+            "total_vacancies": vacancies,
+            "status": rec_status,
+            "review_status": review_status,
+            "primary_notification_url": meta["pdf_url"],
+            "official_website_url": f"https://{meta['domain']}",
+            "official_apply_url": meta["apply_url"],
+            "state_code": meta.get("state_code", "ALL"),
+            "qualification_level": qual,
+            "summary": f"Official Government Notification for {title} by {org}. Total Vacancies: {vacancies}. Pay scale: {pay_text}. Age limit: {age_summary}.",
+            "events": [
+                {"name": "Application Window Opens", "type": "REGISTRATION_START", "date": sql_start},
+                {"name": "Application Registration Deadline", "type": "REGISTRATION_END", "date": sql_end},
+                {"name": "Tier-1 / Preliminary Exam Phase", "type": "EXAM_PHASE_1", "date": "2026-06-15"}
+            ]
+        })
+
+        live_payload_jobs.append({
+            "title": title,
+            "org": org,
+            "department": org,
+            "total_vacancies": vacancies,
+            "salary_range": pay_text,
+            "description": f"Official Recruitment for {title}. Vacancies: {vacancies}. Qualification: {qual}. Apply online: {meta['apply_url']}",
+            "url": meta["apply_url"]
+        })
+
+        if cur:
+            if not existing:
+                cur.execute("""
+                    INSERT INTO recruitments (
+                        recruitment_uuid, title, slug, organization_name, advertisement_number,
+                        notification_number, year, total_vacancies, status, review_status, anomaly_flags,
+                        primary_notification_url, official_website_url, official_apply_url,
+                        state_code, qualification_level, summary, is_verified, verified_at,
+                        created_at, updated_at
+                    ) VALUES (
+                        %s, %s, %s, %s, %s,
+                        %s, 2026, %s, %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s, %s, 1, NOW(),
+                        NOW(), NOW()
+                    );
+                """, (
+                    rec_uuid, title, safe_slug, org, meta.get("advt_no", "2026/01"),
+                    meta.get("advt_no", "2026/01"), vacancies, rec_status, review_status, anomaly_str,
+                    meta["pdf_url"], f"https://{meta['domain']}", meta["apply_url"],
+                    meta.get("state_code", "ALL"), qual,
+                    f"Official Government Notification for {title} by {org}. Total Vacancies: {vacancies}. Pay scale: {pay_text}. Age limit: {age_summary}."
+                ))
+                rec_id = cur.lastrowid
+                logger.info(f"✅ Ingested Recruitment #{rec_id}: {title} ({vacancies} vacancies, Review: {review_status})")
+                new_ingested += 1
+            else:
+                rec_id = existing["id"]
+                cur.execute("""
+                    UPDATE recruitments SET 
+                        total_vacancies = %s, qualification_level = %s,
+                        official_apply_url = %s, primary_notification_url = %s, status = %s,
+                        review_status = %s, anomaly_flags = %s, updated_at = NOW()
+                    WHERE id = %s;
+                """, (vacancies, qual, meta["apply_url"], meta["pdf_url"], rec_status, review_status, anomaly_str, rec_id))
+                logger.info(f"🔄 Updated Recruitment #{rec_id}: {title} (Review: {review_status})")
+                new_ingested += 1
+
+            # Record cryptographic hash in cache
+            hash_detector.record_notice_hash(domain, pdf_url, doc_hash, title)
+            ingested_recruitment_ids.append(rec_id)
+
+            # Insert / Update corresponding job record for candidate portal
+            cur.execute("SELECT id FROM jobs WHERE title = %s LIMIT 1;", (title,))
+            existing_job = cur.fetchone()
+            if not existing_job:
+                cur.execute("""
+                    INSERT INTO jobs (
+                        id, title, description, department, category, job_type,
+                        salary_range, work_mode, status, is_govt, created_at, updated_at
+                    ) VALUES (
+                        %s, %s, %s, %s, 'Government', 'Full-time',
+                        %s, 'On-site', 'OPEN', 1, NOW(), NOW()
+                    );
+                """, (
+                    job_uuid, title, f"Official Recruitment for {title}. Vacancies: {vacancies}. Qualification: {qual}.", org, pay_text
+                ))
+
+            # Seed Live Timeline Events in recruitment_events
+            sync_recruitment_events(cur, rec_id, org, title, meta, sql_start, sql_end)
         else:
-            rec_id = existing["id"]
-            cur.execute("""
-                UPDATE recruitments SET 
-                    total_vacancies = %s, qualification_level = %s,
-                    official_apply_url = %s, primary_notification_url = %s, status = %s,
-                    review_status = %s, anomaly_flags = %s, updated_at = NOW()
-                WHERE id = %s;
-            """, (vacancies, qual, meta["apply_url"], meta["pdf_url"], rec_status, review_status, anomaly_str, rec_id))
-            logger.info(f"🔄 Updated Recruitment #{rec_id}: {title} (Review: {review_status})")
             new_ingested += 1
 
-        # Record cryptographic hash in cache
-        hash_detector.record_notice_hash(domain, pdf_url, doc_hash, title)
-        ingested_recruitment_ids.append(rec_id)
+    # 5. Push to Live Production via HTTPS if SYNC_TARGET == 'LIVE'
+    is_live_sync = getattr(settings, "SYNC_TARGET", "LOCAL") == "LIVE" or (settings.APP_URL and "hamarijobs.com" in settings.APP_URL)
+    if is_live_sync and (live_payload_recruitments or live_payload_jobs):
+        logger.info(f"\n🌐 [HTTPS Live Sync] Transmitting {len(live_payload_recruitments)} recruitments and {len(live_payload_jobs)} jobs to {settings.APP_URL}...")
+        try:
+            pub = PublisherAPI()
+            sync_ok = pub.sync_bulk_jobs(jobs_list=live_payload_jobs, recruitments_list=live_payload_recruitments)
+            if sync_ok:
+                logger.info(f"✨ [LIVE SUCCESS] All {len(live_payload_recruitments)} recruitments & {len(live_payload_jobs)} jobs successfully published to Hostinger live database!")
+            else:
+                logger.warning("⚠️ [LIVE SYNC] Could not complete sync to live server. Check network connection.")
+        except Exception as sync_err:
+            logger.error(f"❌ [LIVE SYNC ERROR] {sync_err}")
 
-        # Insert / Update corresponding job record for candidate portal
-        cur.execute("SELECT id FROM jobs WHERE title = %s LIMIT 1;", (title,))
-        existing_job = cur.fetchone()
-        if not existing_job:
-            cur.execute("""
-                INSERT INTO jobs (
-                    id, title, description, department, category, job_type,
-                    salary_range, work_mode, status, is_govt, created_at, updated_at
-                ) VALUES (
-                    %s, %s, %s, %s, 'Government', 'Full-time',
-                    %s, 'On-site', 'OPEN', 1, NOW(), NOW()
-                );
-            """, (
-                job_uuid, title, f"Official Recruitment for {title}. Vacancies: {vacancies}. Qualification: {qual}.", org, pay_text
-            ))
-
-        # Seed Live Timeline Events in recruitment_events
-        sync_recruitment_events(cur, rec_id, org, title, meta, sql_start, sql_end)
-
-    # 5. Generate Fact-Anchored Guides & Articles
-    logger.info("\n📚 Generating Comprehensive Preparation & Exam Guides...")
-    content_engine = ContentIntelligenceEngine()
+    # 6. Generate Fact-Anchored Guides & Articles (if local DB active)
     total_articles = 0
-    for rec_id in ingested_recruitment_ids:
-        arts = content_engine.generate_recruitment_pillar_articles(rec_id)
-        total_articles += len(arts)
+    if cur and ingested_recruitment_ids:
+        logger.info("\n📚 Generating Comprehensive Preparation & Exam Guides...")
+        content_engine = ContentIntelligenceEngine()
+        for rec_id in ingested_recruitment_ids:
+            arts = content_engine.generate_recruitment_pillar_articles(rec_id)
+            total_articles += len(arts)
 
-    # 6. Regenerate Dynamic XML Sitemaps & Instant Search Engine Indexing
+    # 7. Regenerate Dynamic XML Sitemaps & Instant Search Engine Indexing
     logger.info("\n🗺️ Generating Dynamic Production XML Sitemaps...")
     seo_engine = SitemapAndSEOEngine()
     sitemaps = seo_engine.generate_all_sitemaps()
 
-    # Fetch recently updated URLs to ping IndexNow and Google Indexing
-    cur.execute("SELECT slug FROM recruitments WHERE status = 'Active' LIMIT 50;")
-    slugs = [r["slug"] for r in cur.fetchall()]
-    live_urls = [f"http://localhost:8080/government-jobs/{s}" for s in slugs]
+    # Fetch URLs to ping IndexNow and Google Indexing
+    base_url = settings.APP_URL.rstrip("/")
+    if cur:
+        cur.execute("SELECT slug FROM recruitments WHERE status = 'Active' LIMIT 50;")
+        slugs = [r["slug"] for r in cur.fetchall()]
+    else:
+        slugs = [r["slug"] for r in live_payload_recruitments if r.get("status") == "Active"]
+    
+    live_urls = [f"{base_url}/government-jobs/{s}" for s in slugs]
     
     # Fast indexing pings
     seo_engine.submit_to_indexnow(live_urls)
     seo_engine.submit_to_google_indexing(live_urls)
 
-    # 7. Record run completion in automation_runs
+    # 8. Record run completion
     elapsed_seconds = round(time.time() - t_start, 2)
     summary_log = f"Ingested: {new_ingested}, Skipped: {skipped_unchanged}, Quarantined: {quarantined_count}, Articles: {total_articles}"
-    cur.execute("""
-        UPDATE automation_runs SET
-            status = 'SUCCESS',
-            notices_found = %s,
-            new_ingested = %s,
-            skipped_unchanged = %s,
-            quarantined_count = %s,
-            execution_time_seconds = %s,
-            log_output = %s,
-            completed_at = NOW()
-        WHERE run_uuid = %s;
-    """, (len(REAL_OFFICIAL_GAZETTES), new_ingested, skipped_unchanged, quarantined_count, elapsed_seconds, summary_log, run_uuid))
-    conn.commit()
-
-    conn.close()
+    
+    if cur:
+        cur.execute("""
+            UPDATE automation_runs SET
+                status = 'SUCCESS',
+                notices_found = %s,
+                new_ingested = %s,
+                skipped_unchanged = %s,
+                quarantined_count = %s,
+                execution_time_seconds = %s,
+                log_output = %s,
+                completed_at = NOW()
+            WHERE run_uuid = %s;
+        """, (len(REAL_OFFICIAL_GAZETTES), new_ingested, skipped_unchanged, quarantined_count, elapsed_seconds, summary_log, run_uuid))
+        conn.commit()
+        conn.close()
 
     logger.info("==================================================================")
     logger.info(f"✨ 100% REAL LIVE INGESTION COMPLETED SUCCESSFULLY!")
-    logger.info(f"   - Genuine Recruitments Active: {len(ingested_recruitment_ids)}")
-    logger.info(f"   - Intelligence Articles Generated: {total_articles}")
+    logger.info(f"   - Target: {settings.APP_URL}")
+    logger.info(f"   - Genuine Recruitments Processed: {len(live_payload_recruitments)}")
     logger.info(f"   - Sitemaps Written: {len(sitemaps)}")
     logger.info(f"   - Execution Time: {elapsed_seconds}s | Run UUID: {run_uuid}")
     logger.info("==================================================================")

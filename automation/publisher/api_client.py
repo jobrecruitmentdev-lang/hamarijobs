@@ -20,17 +20,23 @@ class PublisherAPI:
             "User-Agent": settings.USER_AGENT
         }
         
-    def sync_bulk_jobs(self, jobs_list: List[Dict[str, Any]]) -> bool:
+    def sync_bulk_jobs(self, jobs_list: List[Dict[str, Any]], recruitments_list: Optional[List[Dict[str, Any]]] = None) -> bool:
         """
-        Sends the batch of scraped government jobs to the backend to sync to the live database.
+        Sends the batch of scraped government jobs and recruitments to the backend to sync to the live database.
         """
-        if not jobs_list:
-            logger.warning("[PublisherAPI] No jobs provided for sync.")
+        if not jobs_list and not recruitments_list:
+            logger.warning("[PublisherAPI] No jobs or recruitments provided for sync.")
             return True
 
         endpoint = f"{self.base_url}{settings.API_V1_STR}/internal/sync-jobs"
+        payload = {}
+        if jobs_list:
+            payload["jobs"] = jobs_list
+        if recruitments_list:
+            payload["recruitments"] = recruitments_list
+
         try:
-            response = requests.post(endpoint, json={"jobs": jobs_list}, headers=self.headers, timeout=20)
+            response = requests.post(endpoint, json=payload, headers=self.headers, timeout=30)
             if response.status_code in (200, 201):
                 data = response.json()
                 logger.info(f"🌐 [SYNC SUCCESS] {data.get('message', 'Jobs synced successfully')}")
