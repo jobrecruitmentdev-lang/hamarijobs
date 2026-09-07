@@ -31,16 +31,17 @@ class SyncController {
     }
 
     public function syncJobs(): void {
-        $body = file_get_contents('php://input');
-        $payload = json_decode($body, true);
-        $jobs = $payload['jobs'] ?? [];
-        $recruitments = $payload['recruitments'] ?? [];
+        try {
+            $body = file_get_contents('php://input');
+            $payload = json_decode($body, true);
+            $jobs = $payload['jobs'] ?? [];
+            $recruitments = $payload['recruitments'] ?? [];
 
-        if (empty($jobs) && empty($recruitments)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'No jobs or recruitments provided in payload']);
-            return;
-        }
+            if (empty($jobs) && empty($recruitments)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'No jobs or recruitments provided in payload']);
+                return;
+            }
 
         $jobsSynced = 0;
         $recSynced = 0;
@@ -105,19 +106,38 @@ class SyncController {
 
                 // Sync timeline events if provided
                 if (!empty($rec['events']) && is_array($rec['events']) && $recId) {
+                    $validTypes = [
+                        'NOTIFICATION_RELEASED', 'APPLICATION_STARTED', 'APPLICATION_CLOSED',
+                        'FEE_PAYMENT_DEADLINE', 'CORRECTION_WINDOW_OPENED', 'CORRECTION_WINDOW_CLOSED',
+                        'ADMIT_CARD_RELEASED', 'EXAM_DATE', 'ANSWER_KEY_RELEASED', 'OBJECTION_WINDOW_CLOSED',
+                        'RESULT_DECLARED', 'CUTOFF_RELEASED', 'DOCUMENT_VERIFICATION', 'MEDICAL_EXAM',
+                        'FINAL_MERIT_LIST', 'CORRIGENDUM_ISSUED', 'POSTPONED_NOTICE', 'OTHER'
+                    ];
+
                     foreach ($rec['events'] as $ev) {
-                        $evName = $ev['name'] ?? 'Registration Window';
+                        $evTitle = $ev['name'] ?? $ev['title'] ?? 'Important Event';
                         $evDate = $ev['date'] ?? date('Y-m-d');
-                        $evType = $ev['type'] ?? 'REGISTRATION_START';
-                        
-                        $chkEv = $this->db->prepare("SELECT id FROM recruitment_events WHERE recruitment_id = ? AND event_type = ? LIMIT 1");
-                        $chkEv->execute([$recId, $evType]);
-                        if (!$chkEv->fetch()) {
-                            $insEv = $this->db->prepare("
-                                INSERT INTO recruitment_events (recruitment_id, event_name, event_type, event_date, is_tentative, created_at)
-                                VALUES (?, ?, ?, ?, 0, NOW())
-                            ");
-                            $insEv->execute([$recId, $evName, $evType, $evDate]);
+                        $rawType = strtoupper($ev['type'] ?? 'OTHER');
+
+                        // Map common aliases to strict MySQL ENUM values
+                        if ($rawType === 'REGISTRATION_START') $evType = 'APPLICATION_STARTED';
+                        elseif ($rawType === 'REGISTRATION_END') $evType = 'APPLICATION_CLOSED';
+                        elseif (str_contains($rawType, 'EXAM')) $evType = 'EXAM_DATE';
+                        elseif (in_array($rawType, $validTypes, true)) $evType = $rawType;
+                        else $evType = 'OTHER';
+
+                        try {
+                            $chkEv = $this->db->prepare("SELECT id FROM recruitment_events WHERE recruitment_id = ? AND event_type = ? LIMIT 1");
+                            $chkEv->execute([$recId, $evType]);
+                            if (!$chkEv->fetch()) {
+                                $insEv = $this->db->prepare("
+                                    INSERT INTO recruitment_events (recruitment_id, organization_name, event_type, event_title, status, event_date, is_tentative, created_at)
+                                    VALUES (?, ?, ?, ?, 'RELEASED', ?, 0, NOW())
+                                ");
+                                $insEv->execute([$recId, $org, $evType, $evTitle, $evDate]);
+                            }
+                        } catch (\Throwable $evEx) {
+                            error_log("Recruitment event insert warning: " . $evEx->getMessage());
                         }
                     }
                 }
@@ -163,11 +183,19 @@ class SyncController {
             }
         }
 
-        echo json_encode([
-            'success' => true,
-            'message' => "Successfully synced {$recSynced} recruitments and {$jobsSynced} candidate jobs into live platform.",
-            'recruitments_synced' => $recSynced,
-            'jobs_synced' => $jobsSynced
-        ]);
+            echo json_encode([
+                'success' => true,
+                'message' => "Successfully synced {$recSynced} recruitments and {$jobsSynced} candidate jobs into live platform.",
+                'recruitments_synced' => $recSynced,
+                'jobs_synced' => $jobsSynced
+            ]);
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'line' => $e->getLine()
+            ]);
+        }
     }
 }
