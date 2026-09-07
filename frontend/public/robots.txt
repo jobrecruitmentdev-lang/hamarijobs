@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://hamarijobs.com/sitemap.xml
+Sitemap: https://hamarijobs.com/sitemap-index.xml
+Sitemap: https://hamarijobs.com/sitemap-jobs.xml
+Sitemap: https://hamarijobs.com/sitemap-exams.xml
+Sitemap: https://hamarijobs.com/sitemap-articles.xml
+Sitemap: https://hamarijobs.com/sitemap-commissions.xml

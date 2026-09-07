@@ -525,6 +525,22 @@ if ($requestUri === '/sitemap-articles.xml') {
         exit;
     }
 }
+if ($requestUri === '/sitemap-commissions.xml') {
+    $sm = $frontendDir . '/public/sitemap-commissions.xml';
+    if (file_exists($sm)) {
+        header("Content-Type: application/xml; charset=UTF-8");
+        readfile($sm);
+        exit;
+    }
+}
+if ($requestUri === '/robots.txt') {
+    $rb = $frontendDir . '/public/robots.txt';
+    if (file_exists($rb)) {
+        header("Content-Type: text/plain; charset=UTF-8");
+        readfile($rb);
+        exit;
+    }
+}
 
 // Fallback to home
 require_once $frontendDir . '/views/home.php';
