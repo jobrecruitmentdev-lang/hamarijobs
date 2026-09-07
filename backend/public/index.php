@@ -493,7 +493,7 @@ if ($requestUri === '/results') {
 }
 
 // Sitemaps
-if ($requestUri === '/sitemap.xml' || $requestUri === '/sitemap-index.xml') {
+if ($requestUri === '/sitemap.xml' || $requestUri === '/sitemap-index.xml' || $requestUri === '/sitemap_index.xml') {
     $sm = $frontendDir . '/public/sitemap-index.xml';
     if (file_exists($sm)) {
         header("Content-Type: application/xml; charset=UTF-8");

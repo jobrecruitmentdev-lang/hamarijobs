@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import subprocess
 import paramiko
 
@@ -24,12 +24,21 @@ def run():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(HOST, port=PORT, username=USER, password=PASS, timeout=20)
         
-        cmd = f'cd {PATH} && git fetch origin main && git reset --hard origin/main'
-        stdin, stdout, stderr = ssh.exec_command(cmd, get_pty=True)
+        cmd = f"git -C {PATH} fetch origin main && git -C {PATH} reset --hard origin/main"
+        stdin, stdout, stderr = ssh.exec_command(cmd)
+        exit_code = stdout.channel.recv_exit_status()
         out = stdout.read().decode('utf-8', errors='ignore')
-        print(out.strip())
+        err = stderr.read().decode('utf-8', errors='ignore')
+        if out.strip():
+            print(out.strip())
+        if err.strip():
+            print(err.strip())
         ssh.close()
-        print("\n[SUCCESS] Live server updated to latest commit!")
+        
+        if exit_code == 0:
+            print("\n[SUCCESS] Live server updated to latest commit!")
+        else:
+            print(f"\n[WARNING] Live update exited with code: {exit_code}")
     except Exception as e:
         print(f"\n[ERROR] SSH Deployment failed: {e}")
         sys.exit(1)
