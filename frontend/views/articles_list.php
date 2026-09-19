@@ -24,12 +24,12 @@ if (!empty($type)) {
 
 $whereClause = implode(' AND ', $conditions);
 
-$stmt = $db->prepare("SELECT * FROM articles WHERE {$whereClause} ORDER BY published_at DESC LIMIT 50");
+$stmt = $db->prepare("SELECT * FROM articles WHERE {$whereClause} ORDER BY published_at DESC LIMIT 100");
 $stmt->execute($params);
 $articles = $stmt->fetchAll();
 
-$pageTitle = "Government Exam Preparation Guides & Editorial Analysis 2026";
-$pageDesc = "In-depth editorial breakdowns of official gazette notifications, section-wise syllabus weightages, eligibility rules, and historical cutoff trends.";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getArticlesListSeo();
 require_once __DIR__ . '/partials/header.php';
 ?>
 

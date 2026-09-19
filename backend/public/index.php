@@ -93,6 +93,7 @@ function serveStaticFile(string $filePath): void {
         'svg'   => 'image/svg+xml',
         'webp'  => 'image/webp',
         'ico'   => 'image/x-icon',
+        'webmanifest' => 'application/manifest+json; charset=UTF-8',
         'woff2' => 'font/woff2',
         'woff'  => 'font/woff',
         'ttf'   => 'font/ttf',
@@ -433,12 +434,21 @@ if (str_starts_with($requestUri, '/admin')) {
     }
 }
 
-// Public Views
-if ($requestUri === '/government-jobs' || $requestUri === '/jobs') {
+// Public Views - Canonical 301 Normalization & Routing
+if ($requestUri === '/jobs') {
+    header("Location: /government-jobs", true, 301);
+    exit;
+}
+if ($requestUri === '/government-jobs') {
     require_once $frontendDir . '/views/jobs_list.php';
     exit;
 }
 
+if (str_starts_with($requestUri, '/government-jobs/')) {
+    $slug = substr($requestUri, strlen('/government-jobs/'));
+    header("Location: /jobs/" . $slug, true, 301);
+    exit;
+}
 if (str_starts_with($requestUri, '/jobs/')) {
     $slug = substr($requestUri, strlen('/jobs/'));
     $_GET['slug'] = $slug;
@@ -458,20 +468,29 @@ if (str_starts_with($requestUri, '/commissions/')) {
     exit;
 }
 
-// Dedicated Exam Hubs Directory & Detail Views
+// Dedicated Exam Hubs Directory & Detail Views (Zero 404 Guarantee for legacy sub-paths)
 if ($requestUri === '/exams') {
     require_once $frontendDir . '/views/exams_list.php';
     exit;
 }
 if (str_starts_with($requestUri, '/exams/')) {
-    $slug = substr($requestUri, strlen('/exams/'));
+    $sub = trim(substr($requestUri, strlen('/exams/')), '/');
+    $parts = explode('/', $sub);
+    $slug = $parts[0] ?? '';
     $_GET['slug'] = $slug;
+    if (isset($parts[1])) {
+        $_GET['tab'] = $parts[1];
+    }
     require_once $frontendDir . '/views/exam_detail.php';
     exit;
 }
 
 // Dedicated Preparation Guides Directory & Detail Views
-if ($requestUri === '/articles' || $requestUri === '/guides') {
+if ($requestUri === '/guides') {
+    header("Location: /articles", true, 301);
+    exit;
+}
+if ($requestUri === '/articles') {
     require_once $frontendDir . '/views/articles_list.php';
     exit;
 }

@@ -55,62 +55,90 @@ class SitemapAndSEOEngine:
         cur.execute("SELECT slug, updated_at, created_at FROM recruitments WHERE status = 'Active' ORDER BY updated_at DESC;")
         jobs = cur.fetchall()
         jobs_urls = [{"loc": f"{self.base_url}/jobs/{j['slug']}", "lastmod": (j["updated_at"] or j["created_at"]).strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"} for j in jobs]
-        jobs_xml_path = self._write_sitemap_xml("sitemap-jobs.xml", jobs_urls)
+        # Include primary directory pages in jobs sitemap
+        static_pages = [
+            {"loc": f"{self.base_url}/", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "1.0"},
+            {"loc": f"{self.base_url}/government-jobs", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"},
+            {"loc": f"{self.base_url}/admit-cards", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"},
+            {"loc": f"{self.base_url}/results", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"}
+        ]
+        jobs_xml_path = self._write_sitemap_xml("sitemap-jobs.xml", static_pages + jobs_urls)
 
-        # 2. Exams Sitemap
+        # 2. Exams Sitemap (Clean URLs with 200 OK status)
         cur.execute("SELECT slug, updated_at, created_at FROM exams WHERE is_active = 1;")
         exams = cur.fetchall()
-        exams_urls = []
+        exams_urls = [{"loc": f"{self.base_url}/exams", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"}]
         for e in exams:
             lastmod = (e["updated_at"] or e["created_at"]).strftime("%Y-%m-%d")
-            exams_urls.append({"loc": f"{self.base_url}/exams/{e['slug']}", "lastmod": lastmod, "changefreq": "weekly", "priority": "0.9"})
-            exams_urls.append({"loc": f"{self.base_url}/exams/{e['slug']}/syllabus", "lastmod": lastmod, "changefreq": "monthly", "priority": "0.8"})
-            exams_urls.append({"loc": f"{self.base_url}/exams/{e['slug']}/exam-pattern", "lastmod": lastmod, "changefreq": "monthly", "priority": "0.8"})
-            exams_urls.append({"loc": f"{self.base_url}/exams/{e['slug']}/cutoff", "lastmod": lastmod, "changefreq": "monthly", "priority": "0.8"})
+            exams_urls.append({"loc": f"{self.base_url}/exams/{e['slug']}", "lastmod": lastmod, "changefreq": "weekly", "priority": "0.85"})
         exams_xml_path = self._write_sitemap_xml("sitemap-exams.xml", exams_urls)
 
         # 3. Articles Sitemap
         cur.execute("SELECT slug, updated_at, published_at FROM articles WHERE status = 'Published' ORDER BY updated_at DESC;")
         articles = cur.fetchall()
-        articles_urls = [{"loc": f"{self.base_url}/articles/{a['slug']}", "lastmod": (a["updated_at"] or a["published_at"]).strftime("%Y-%m-%d"), "changefreq": "weekly", "priority": "0.8"} for a in articles]
+        articles_urls = [{"loc": f"{self.base_url}/articles", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"}]
+        for a in articles:
+            articles_urls.append({"loc": f"{self.base_url}/articles/{a['slug']}", "lastmod": (a["updated_at"] or a["published_at"]).strftime("%Y-%m-%d"), "changefreq": "weekly", "priority": "0.8"})
         articles_xml_path = self._write_sitemap_xml("sitemap-articles.xml", articles_urls)
+
+        # 4. Commissions Sitemap
+        cur.execute("SELECT slug, updated_at, created_at FROM commissions WHERE is_active = 1;")
+        commissions = cur.fetchall()
+        commissions_urls = [{"loc": f"{self.base_url}/commissions", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"}]
+        for c in commissions:
+            commissions_urls.append({"loc": f"{self.base_url}/commissions/{c['slug']}", "lastmod": (c["updated_at"] or c["created_at"]).strftime("%Y-%m-%d"), "changefreq": "weekly", "priority": "0.8"})
+        commissions_xml_path = self._write_sitemap_xml("sitemap-commissions.xml", commissions_urls)
 
         conn.close()
 
-        # 4. Master Sitemap Index
+        # 5. Master Sitemap Index
         sitemap_files = [
             f"{self.base_url}/sitemap-jobs.xml",
             f"{self.base_url}/sitemap-exams.xml",
-            f"{self.base_url}/sitemap-articles.xml"
+            f"{self.base_url}/sitemap-articles.xml",
+            f"{self.base_url}/sitemap-commissions.xml"
         ]
         index_xml_path = self._write_sitemap_index("sitemap-index.xml", sitemap_files)
-        # Also mirror to sitemap.xml for root discovery
+        # Mirror to sitemap.xml and sitemap_index.xml
         self._write_sitemap_index("sitemap.xml", sitemap_files)
+        self._write_sitemap_index("sitemap_index.xml", sitemap_files)
 
-        logger.info(f"🗺 [SitemapEngine] Generated Sitemaps: {len(jobs_urls)} jobs, {len(exams_urls)} exams, {len(articles_urls)} articles")
+        # Synchronize generated sitemaps across root and backend/public
+        import shutil
+        sync_dirs = [ROOT_DIR, os.path.join(ROOT_DIR, "backend", "public")]
+        for sdir in sync_dirs:
+            os.makedirs(sdir, exist_ok=True)
+            for sname in ["sitemap.xml", "sitemap-index.xml", "sitemap_index.xml", "sitemap-jobs.xml", "sitemap-exams.xml", "sitemap-articles.xml", "sitemap-commissions.xml"]:
+                src_file = os.path.join(self.public_dir, sname)
+                if os.path.exists(src_file):
+                    shutil.copy2(src_file, os.path.join(sdir, sname))
+
+        logger.info(f"🗺 [SitemapEngine] Generated Sitemaps: {len(jobs_urls)} jobs, {len(exams_urls)} exams, {len(articles_urls)} articles, {len(commissions_urls)} commissions")
         return {
             "index": index_xml_path,
             "jobs": jobs_xml_path,
             "exams": exams_xml_path,
-            "articles": articles_xml_path
+            "articles": articles_xml_path,
+            "commissions": commissions_xml_path
         }
 
     def _write_sitemap_xml(self, filename: str, urls: List[Dict[str, str]]) -> str:
         filepath = os.path.join(self.public_dir, filename)
-        root = ET.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+        ET.register_namespace('', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+        root = ET.Element('{http://www.sitemaps.org/schemas/sitemap/0.9}urlset')
         
         for u in urls:
-            url_elem = ET.SubElement(root, "url")
-            loc = ET.SubElement(url_elem, "loc")
+            url_elem = ET.SubElement(root, '{http://www.sitemaps.org/schemas/sitemap/0.9}url')
+            loc = ET.SubElement(url_elem, '{http://www.sitemaps.org/schemas/sitemap/0.9}loc')
             loc.text = u["loc"]
             if "lastmod" in u:
-                lastmod = ET.SubElement(url_elem, "lastmod")
+                lastmod = ET.SubElement(url_elem, '{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod')
                 lastmod.text = u["lastmod"]
             if "changefreq" in u:
-                changefreq = ET.SubElement(url_elem, "changefreq")
+                changefreq = ET.SubElement(url_elem, '{http://www.sitemaps.org/schemas/sitemap/0.9}changefreq')
                 changefreq.text = u["changefreq"]
             if "priority" in u:
-                priority = ET.SubElement(url_elem, "priority")
+                priority = ET.SubElement(url_elem, '{http://www.sitemaps.org/schemas/sitemap/0.9}priority')
                 priority.text = u["priority"]
                 
         tree = ET.ElementTree(root)
@@ -119,14 +147,15 @@ class SitemapAndSEOEngine:
 
     def _write_sitemap_index(self, filename: str, sitemap_urls: List[str]) -> str:
         filepath = os.path.join(self.public_dir, filename)
-        root = ET.Element("sitemapindex", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+        ET.register_namespace('', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+        root = ET.Element('{http://www.sitemaps.org/schemas/sitemap/0.9}sitemapindex')
         
         now_str = datetime.now().strftime("%Y-%m-%d")
         for s_url in sitemap_urls:
-            sitemap_elem = ET.SubElement(root, "sitemap")
-            loc = ET.SubElement(sitemap_elem, "loc")
+            sitemap_elem = ET.SubElement(root, '{http://www.sitemaps.org/schemas/sitemap/0.9}sitemap')
+            loc = ET.SubElement(sitemap_elem, '{http://www.sitemaps.org/schemas/sitemap/0.9}loc')
             loc.text = s_url
-            lastmod = ET.SubElement(sitemap_elem, "lastmod")
+            lastmod = ET.SubElement(sitemap_elem, '{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod')
             lastmod.text = now_str
             
         tree = ET.ElementTree(root)

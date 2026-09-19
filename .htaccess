@@ -20,6 +20,14 @@ Options -Indexes -MultiViews
     RewriteEngine On
     RewriteBase /
 
+    # Canonical Domain & HTTPS Normalization (Production hamarijobs.com only - safe for local)
+    RewriteCond %{HTTP_HOST} ^(www\.)?hamarijobs\.com$ [NC]
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://hamarijobs.com/$1 [R=301,L]
+
+    RewriteCond %{HTTP_HOST} ^www\.hamarijobs\.com$ [NC]
+    RewriteRule ^(.*)$ https://hamarijobs.com/$1 [R=301,L]
+
     # 1. Protect internal server folders from direct HTTP browsing
     RewriteRule ^(backend/app|database|storage|automation|tests|\.git|\.gemini) - [F,L]
 
