@@ -449,6 +449,31 @@ if (str_starts_with($requestUri, '/government-jobs/')) {
     header("Location: /jobs/" . $slug, true, 301);
     exit;
 }
+
+// High-Traffic Programmatic Keyword Silos (Topical Authority Hubs)
+$siloRoutes = [
+    '/jobs/10th-pass'         => ['qualification' => '10th'],
+    '/jobs/12th-pass'         => ['qualification' => '12th'],
+    '/jobs/graduate'          => ['qualification' => 'Graduate'],
+    '/jobs/railway'           => ['category' => 'Railway'],
+    '/jobs/police'            => ['category' => 'Police'],
+    '/jobs/bank'              => ['category' => 'Bank'],
+    '/jobs/defence'           => ['category' => 'Defence'],
+    '/jobs/uttar-pradesh'     => ['state' => 'UP'],
+    '/jobs/bihar'             => ['state' => 'BR'],
+    '/jobs/rajasthan'         => ['state' => 'RJ'],
+    '/jobs/delhi'             => ['state' => 'DL'],
+    '/jobs/madhya-pradesh'    => ['state' => 'MP']
+];
+
+if (isset($siloRoutes[$requestUri])) {
+    foreach ($siloRoutes[$requestUri] as $paramKey => $paramVal) {
+        $_GET[$paramKey] = $paramVal;
+    }
+    require_once $frontendDir . '/views/jobs_list.php';
+    exit;
+}
+
 if (str_starts_with($requestUri, '/jobs/')) {
     $slug = substr($requestUri, strlen('/jobs/'));
     $_GET['slug'] = $slug;

@@ -55,12 +55,27 @@ class SitemapAndSEOEngine:
         cur.execute("SELECT slug, updated_at, created_at FROM recruitments WHERE status = 'Active' ORDER BY updated_at DESC;")
         jobs = cur.fetchall()
         jobs_urls = [{"loc": f"{self.base_url}/jobs/{j['slug']}", "lastmod": (j["updated_at"] or j["created_at"]).strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"} for j in jobs]
-        # Include primary directory pages in jobs sitemap
+        # Include primary directory pages and programmatic keyword silos in jobs sitemap
         static_pages = [
             {"loc": f"{self.base_url}/", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "1.0"},
             {"loc": f"{self.base_url}/government-jobs", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"},
             {"loc": f"{self.base_url}/admit-cards", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"},
-            {"loc": f"{self.base_url}/results", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"}
+            {"loc": f"{self.base_url}/results", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.9"},
+            # Programmatic Qualification Silos
+            {"loc": f"{self.base_url}/jobs/10th-pass", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/12th-pass", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/graduate", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            # Programmatic Department Silos
+            {"loc": f"{self.base_url}/jobs/railway", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/police", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/bank", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/defence", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            # Programmatic State Silos
+            {"loc": f"{self.base_url}/jobs/uttar-pradesh", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/bihar", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/rajasthan", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/delhi", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"},
+            {"loc": f"{self.base_url}/jobs/madhya-pradesh", "lastmod": datetime.now().strftime("%Y-%m-%d"), "changefreq": "daily", "priority": "0.85"}
         ]
         jobs_xml_path = self._write_sitemap_xml("sitemap-jobs.xml", static_pages + jobs_urls)
 

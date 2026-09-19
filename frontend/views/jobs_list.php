@@ -69,8 +69,9 @@ $stmt = $db->prepare("
 $stmt->execute($params);
 $jobs = $stmt->fetchAll();
 
-$pageTitle = "Government Jobs 2026 — Latest Verified Official Recruitment Notifications Across India";
-$pageDesc = "Search, filter, and apply for latest official government recruitment notifications across UPSC, SSC, Railways, Banking, Defence, and State PSCs with 100% verified ground truth.";
+$currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/government-jobs', PHP_URL_PATH);
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getJobsListSeo($state, $qualification, $search, $category, $currentPath);
 require_once __DIR__ . '/partials/header.php';
 ?>
 
