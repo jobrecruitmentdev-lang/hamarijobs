@@ -53,7 +53,8 @@ $jobCount = $db->query("SELECT COUNT(*) FROM recruitments WHERE status = 'Active
 $sourceCount = $db->query("SELECT COUNT(*) FROM source_registry WHERE status = 'Active'")->fetchColumn() ?: 24;
 $examCount = $db->query("SELECT COUNT(*) FROM exams WHERE is_active = 1")->fetchColumn() ?: 4;
 
-$pageTitle = "Government Recruitment Intelligence Portal — Verified Official Jobs, Exams & Notifications";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getHomeSeo();
 require_once __DIR__ . '/partials/header.php';
 ?>
 

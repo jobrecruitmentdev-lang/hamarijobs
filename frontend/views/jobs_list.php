@@ -53,6 +53,20 @@ $orderBy = match ($sort) {
     default => "r.updated_at DESC"
 };
 
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = 18;
+
+// Count total matching jobs for pagination
+$countStmt = $db->prepare("SELECT COUNT(*) FROM recruitments r WHERE {$whereClause}");
+$countStmt->execute($params);
+$totalJobs = (int)$countStmt->fetchColumn();
+$totalPages = max(1, (int)ceil($totalJobs / $perPage));
+
+if ($page > $totalPages && $totalJobs > 0) {
+    $page = $totalPages;
+}
+$offset = ($page - 1) * $perPage;
+
 $stmt = $db->prepare("
     SELECT r.*,
            (SELECT event_date FROM recruitment_events WHERE recruitment_id = r.id AND event_type = 'APPLICATION_STARTED' LIMIT 1) as start_date,
@@ -64,14 +78,20 @@ $stmt = $db->prepare("
     FROM recruitments r
     WHERE {$whereClause} 
     ORDER BY {$orderBy} 
-    LIMIT 50
+    LIMIT {$perPage} OFFSET {$offset}
 ");
 $stmt->execute($params);
 $jobs = $stmt->fetchAll();
 
+function getJobsPaginationUrl(int $targetPage): string {
+    $query = $_GET;
+    $query['page'] = $targetPage;
+    return '?' . http_build_query($query);
+}
+
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/government-jobs', PHP_URL_PATH);
 require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
-$seo = \App\Services\SeoEngine::getJobsListSeo($state, $qualification, $search, $category, $currentPath);
+$seo = \App\Services\SeoEngine::getJobsListSeo($state, $qualification, $search, $category, $currentPath, $page);
 require_once __DIR__ . '/partials/header.php';
 ?>
 
@@ -326,6 +346,30 @@ require_once __DIR__ . '/partials/header.php';
         </div>
       <?php endforeach; ?>
     </div>
+
+    <!-- Crawl-Friendly Numeric Pagination -->
+    <?php if ($totalPages > 1): ?>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 3rem; flex-wrap: wrap;">
+        <?php if ($page > 1): ?>
+          <a href="<?= getJobsPaginationUrl($page - 1) ?>" class="btn btn-sm btn-outline" rel="prev">&larr; Previous</a>
+        <?php endif; ?>
+
+        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+          <?php if ($i === $page): ?>
+            <span class="btn btn-sm btn-primary" style="pointer-events: none;"><?= $i ?></span>
+          <?php else: ?>
+            <a href="<?= getJobsPaginationUrl($i) ?>" class="btn btn-sm btn-outline"><?= $i ?></a>
+          <?php endif; ?>
+        <?php endfor; ?>
+
+        <?php if ($page < $totalPages): ?>
+          <a href="<?= getJobsPaginationUrl($page + 1) ?>" class="btn btn-sm btn-outline" rel="next">Next &rarr;</a>
+        <?php endif; ?>
+      </div>
+      <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.75rem;">
+        Showing page <strong><?= $page ?></strong> of <strong><?= $totalPages ?></strong> (Total <?= number_format($totalJobs) ?> verified recruitments)
+      </p>
+    <?php endif; ?>
   <?php endif; ?>
 
 </div>

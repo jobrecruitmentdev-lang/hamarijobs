@@ -36,8 +36,8 @@ $stmt = $db->prepare("
 $stmt->execute($params);
 $events = $stmt->fetchAll();
 
-$pageTitle = "Government Exam Admit Cards & Hall Tickets 2026 — Direct Download Links & Exam Dates";
-$pageDesc = "Download official government examination admit cards, hall tickets, city intimation slips for UPSC, SSC, Railways, Banking, and State PSC exams.";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getAdmitCardsSeo();
 require_once __DIR__ . '/partials/header.php';
 ?>
 

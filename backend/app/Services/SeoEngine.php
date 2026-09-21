@@ -88,7 +88,7 @@ class SeoEngine {
     /**
      * 2. GOVERNMENT JOBS DIRECTORY SEO
      */
-    public static function getJobsListSeo(?string $state = null, ?string $qual = null, ?string $q = null, ?string $category = null, ?string $customPath = null): array {
+    public static function getJobsListSeo(?string $state = null, ?string $qual = null, ?string $q = null, ?string $category = null, ?string $customPath = null, int $page = 1): array {
         $stateNames = [
             'UP' => 'Uttar Pradesh',
             'BR' => 'Bihar',
@@ -113,6 +113,11 @@ class SeoEngine {
         $title = "{$prefix}: Active Vacancies, Gazette Notifications & Online Form";
         $desc = "Browse verified {$prefix}. Check category-wise age limit, salary pay matrix, educational eligibility and direct online application links.";
         $canonical = $customPath ? (self::BASE_URL . $customPath) : (self::BASE_URL . '/government-jobs');
+
+        if ($page > 1) {
+            $title .= " (Page {$page})";
+            $canonical .= (str_contains($canonical, '?') ? '&' : '?') . "page={$page}";
+        }
 
         $schemas = [
             [

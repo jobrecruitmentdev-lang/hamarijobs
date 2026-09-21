@@ -40,6 +40,7 @@
             <li><a href="/admit-cards" class="footer-link">Admit Cards & Hall Tickets</a></li>
             <li><a href="/results" class="footer-link">Exam Results & Merit Lists</a></li>
             <li><a href="/articles" class="footer-link">Preparation Guides & Analysis</a></li>
+            <li><a href="/sitemap" class="footer-link" style="color: var(--primary-red); font-weight: 700;">★ Master HTML Sitemap (All Pages)</a></li>
           </ul>
         </div>
       </div>

@@ -29,9 +29,8 @@ if (!empty($article['recruitment_id'])) {
     $rec = $recStmt->fetch();
 }
 
-$pageTitle = "{$article['title']} — Official Recruitment Intelligence Guide";
-$pageDesc = htmlspecialchars($article['excerpt'] ?: substr(strip_tags($article['content']), 0, 160));
-$canonicalUrl = "https://hamarijobs.com/articles/{$article['slug']}";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getArticleDetailSeo($article, $rec);
 
 require_once __DIR__ . '/partials/header.php';
 ?>

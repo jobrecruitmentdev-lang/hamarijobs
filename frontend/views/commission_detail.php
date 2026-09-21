@@ -50,9 +50,8 @@ $examStmt = $db->prepare("SELECT * FROM exams WHERE conducting_body LIKE ? OR sh
 $examStmt->execute(["%{$comm['filter_keyword']}%", "%{$comm['filter_keyword']}%", "%{$comm['filter_keyword']}%"]);
 $exams = $examStmt->fetchAll();
 
-$pageTitle = "{$comm['name']} Recruitment Dossier 2026 — Verified Notices, Exam Schemes, Syllabus";
-$pageDesc = "Complete intelligence dossier for {$comm['name']} ({$comm['short']}). Access active official job openings, exam patterns, cutoff trends, and official portals.";
-$canonicalUrl = "https://hamarijobs.com/commissions/{$slug}";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getCommissionDetailSeo($comm, $jobs, $exams);
 
 require_once __DIR__ . '/partials/header.php';
 ?>

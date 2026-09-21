@@ -1,8 +1,25 @@
 <?php
 require_once __DIR__ . '/icons.php';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-$pageTitle = $pageTitle ?? "Government Recruitment Intelligence Platform — Verified Official Jobs, Exams & Results";
-$pageDesc = $pageDesc ?? "India's premier official government recruitment intelligence portal. Autonomous discovery, verified notifications, exam patterns, syllabus, and previous year cutoff trends.";
+
+// Merge with $seo array if set by the view
+if (isset($seo) && is_array($seo)) {
+    $pageTitle = $seo['title'] ?? $pageTitle ?? "Government Jobs 2026 — Verified Recruitment Notifications";
+    $pageDesc = $seo['description'] ?? $pageDesc ?? "India's premier official government recruitment intelligence portal.";
+    $canonicalUrl = $seo['canonical'] ?? $canonicalUrl ?? ("https://hamarijobs.com" . $currentPath);
+    $ogType = $seo['og_type'] ?? 'website';
+    $ogImage = $seo['og_image'] ?? 'https://hamarijobs.com/assets/images/logo.png';
+    $twitterCard = $seo['twitter_card'] ?? 'summary_large_image';
+    $schemas = $seo['schemas'] ?? [];
+} else {
+    $pageTitle = $pageTitle ?? "Government Recruitment Intelligence Platform — Verified Official Jobs, Exams & Results";
+    $pageDesc = $pageDesc ?? "India's premier official government recruitment intelligence portal. Autonomous discovery, verified notifications, exam patterns, syllabus, and previous year cutoff trends.";
+    $canonicalUrl = $canonicalUrl ?? ("https://hamarijobs.com" . $currentPath);
+    $ogType = 'website';
+    $ogImage = 'https://hamarijobs.com/assets/images/logo.png';
+    $twitterCard = 'summary';
+    $schemas = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,11 +28,42 @@ $pageDesc = $pageDesc ?? "India's premier official government recruitment intell
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($pageTitle) ?></title>
   <meta name="description" content="<?= htmlspecialchars($pageDesc) ?>">
-  <link rel="stylesheet" href="/assets/css/main.css?v=<?= file_exists(__DIR__ . '/../../public/css/main.css') ? filemtime(__DIR__ . '/../../public/css/main.css') : '2.1' ?>">
-  <link rel="icon" type="image/png" href="/assets/images/logo.png">
-  <?php if (isset($canonicalUrl)): ?>
-    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+  <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+  <!-- Google & Browser Favicon Suite -->
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/web-app-manifest-192x192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#dc2626">
+
+  <!-- Open Graph / Social Media Tags -->
+  <meta property="og:site_name" content="HamariJobs">
+  <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>">
+  <meta property="og:description" content="<?= htmlspecialchars($pageDesc) ?>">
+  <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl) ?>">
+  <meta property="og:type" content="<?= htmlspecialchars($ogType) ?>">
+  <meta property="og:image" content="<?= htmlspecialchars($ogImage) ?>">
+  <meta property="og:locale" content="en_IN">
+
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="<?= htmlspecialchars($twitterCard) ?>">
+  <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle) ?>">
+  <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc) ?>">
+  <meta name="twitter:image" content="<?= htmlspecialchars($ogImage) ?>">
+
+  <!-- Schema.org JSON-LD Structured Data Injection -->
+  <?php if (!empty($schemas)): ?>
+    <?php foreach ($schemas as $schemaItem): ?>
+      <script type="application/ld+json">
+      <?= json_encode($schemaItem, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>
+      </script>
+    <?php endforeach; ?>
   <?php endif; ?>
+
+  <link rel="stylesheet" href="/assets/css/main.css?v=<?= file_exists(__DIR__ . '/../../public/css/main.css') ? filemtime(__DIR__ . '/../../public/css/main.css') : '2.1' ?>">
   <!-- Chart.js for analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>

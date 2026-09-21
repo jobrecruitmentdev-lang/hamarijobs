@@ -46,8 +46,8 @@ $cutStmt = $db->query("
 ");
 $cutoffs = $cutStmt->fetchAll();
 
-$pageTitle = "Government Exam Results & Merit Lists 2026 — Official Scorecards & Cutoffs";
-$pageDesc = "Check latest official government recruitment examination results, selection merit lists, scorecards, and cutoff marks for UPSC, SSC, Railways, Banking, and State PSCs.";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getResultsSeo();
 require_once __DIR__ . '/partials/header.php';
 ?>
 

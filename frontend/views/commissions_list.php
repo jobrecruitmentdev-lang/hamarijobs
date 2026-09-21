@@ -18,8 +18,8 @@ foreach ($commissions as $idx => $cItem) {
     $commissions[$idx]['short'] = $cItem['short_name'];
 }
 
-$pageTitle = "Government Recruiting Commissions Directory 2026 — UPSC, SSC, Railways, Banks & State PSCs";
-$pageDesc = "Complete directory of official government recruiting commissions across India. Monitor active notifications, examination schedules, and official portals.";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getCommissionsListSeo();
 require_once __DIR__ . '/partials/header.php';
 ?>
 

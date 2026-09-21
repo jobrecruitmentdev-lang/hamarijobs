@@ -13,23 +13,25 @@ from automation.logger import logger
 
 def get_job_urls() -> List[str]:
     """
-    Extracts all canonical job URLs from the generated sitemap-jobs.xml.
+    Extracts all canonical URLs across jobs, exams, articles, commissions, and silos.
     """
-    sitemap_path = os.path.join(ROOT_DIR, "frontend", "public", "sitemap-jobs.xml")
-    if not os.path.exists(sitemap_path):
-        sitemap_path = os.path.join(ROOT_DIR, "sitemap-jobs.xml")
+    all_urls_path = os.path.join(ROOT_DIR, "scratch", "all_urls.txt")
+    if os.path.exists(all_urls_path):
+        with open(all_urls_path, "r", encoding="utf-8") as f:
+            urls = [line.strip() for line in f if line.strip() and line.strip().startswith("https://")]
+            if urls:
+                return list(dict.fromkeys(urls))
 
-    if not os.path.exists(sitemap_path):
-        logger.error(f"Sitemap file not found at {sitemap_path}")
-        return []
+    urls = ["https://hamarijobs.com/", "https://hamarijobs.com/government-jobs", "https://hamarijobs.com/sitemap"]
+    for sm_name in ["sitemap-jobs.xml", "sitemap-exams.xml", "sitemap-articles.xml", "sitemap-commissions.xml"]:
+        sm_path = os.path.join(ROOT_DIR, "frontend", "public", sm_name)
+        if not os.path.exists(sm_path):
+            sm_path = os.path.join(ROOT_DIR, sm_name)
+        if os.path.exists(sm_path):
+            with open(sm_path, "r", encoding="utf-8") as f:
+                found = re.findall(r'<loc>(https://hamarijobs\.com/[^<]+)</loc>', f.read())
+                urls.extend(found)
 
-    with open(sitemap_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    # Extract all /jobs/ URLs
-    urls = re.findall(r'<loc>(https://hamarijobs\.com/jobs/[^<]+)</loc>', content)
-    # Also include the main directory URL
-    urls.insert(0, "https://hamarijobs.com/government-jobs")
     return list(dict.fromkeys(urls))
 
 def submit_urls_to_google(sa_path: str = None) -> bool:

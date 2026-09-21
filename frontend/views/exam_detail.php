@@ -47,9 +47,8 @@ $recStmt = $db->prepare("SELECT * FROM recruitments WHERE organization_name LIKE
 $recStmt->execute(["%{$exam['short_name']}%", "%{$exam['short_name']}%"]);
 $relatedRecs = $recStmt->fetchAll();
 
-$pageTitle = "{$exam['name']} Intelligence Hub 2026 — Pattern, Syllabus, Cutoff & Previous Year Analysis";
-$pageDesc = "Complete intelligence hub for {$exam['name']} ({$exam['short_name']}) conducted by {$exam['conducting_body']}. Official exam scheme, syllabus weightage, and previous year cutoff trends.";
-$canonicalUrl = "https://hamarijobs.com/exams/{$exam['slug']}";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getExamDetailSeo($exam, $phases, $patterns, $syllabus, $cutoffs);
 
 require_once __DIR__ . '/partials/header.php';
 ?>
@@ -58,8 +57,8 @@ require_once __DIR__ . '/partials/header.php';
   
   <!-- Breadcrumb -->
   <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-    <a href="/" style="color: var(--text-secondary);">Home</a> &nbsp;/&nbsp; 
-    <a href="/#exams" style="color: var(--text-secondary);">Exam Hubs</a> &nbsp;/&nbsp; 
+    <a href="/" style="color: var(--text-secondary); text-decoration: none;">Home</a> &nbsp;&rsaquo;&nbsp; 
+    <a href="/exams" style="color: var(--text-secondary); text-decoration: none;">Exam Hubs</a> &nbsp;&rsaquo;&nbsp; 
     <span style="color: var(--primary-red); font-weight: 600;"><?= htmlspecialchars($exam['short_name']) ?></span>
   </div>
 

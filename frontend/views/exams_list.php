@@ -29,8 +29,8 @@ $stmt = $db->prepare("SELECT * FROM exams WHERE {$whereClause} ORDER BY category
 $stmt->execute($params);
 $exams = $stmt->fetchAll();
 
-$pageTitle = "Government Exam Intelligence Hubs 2026 — Pattern, Syllabus, Cutoffs & Schemes";
-$pageDesc = "Explore complete examination schemes, multi-phase patterns, topic weightages, and previous year cutoff trends for UPSC, SSC, RRB, IBPS, and State PSCs.";
+require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
+$seo = \App\Services\SeoEngine::getExamsListSeo();
 require_once __DIR__ . '/partials/header.php';
 ?>
 

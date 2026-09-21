@@ -536,6 +536,12 @@ if ($requestUri === '/results') {
     exit;
 }
 
+// Dedicated HTML Master Sitemap & Crawl Hub
+if ($requestUri === '/sitemap' || $requestUri === '/html-sitemap') {
+    require_once $frontendDir . '/views/sitemap.php';
+    exit;
+}
+
 // Sitemaps
 if ($requestUri === '/sitemap.xml' || $requestUri === '/sitemap-index.xml' || $requestUri === '/sitemap_index.xml') {
     $sm = $frontendDir . '/public/sitemap-index.xml';
