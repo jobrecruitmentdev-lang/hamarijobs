@@ -34,7 +34,7 @@ $allCommissions = $commStmt->fetchAll();
 
 // 4. Fetch All Published Preparation Articles & Guides
 $artStmt = $db->query("
-    SELECT id, title, slug, published_at, category 
+    SELECT id, title, slug, published_at, article_type 
     FROM articles 
     WHERE status = 'Published' 
     ORDER BY published_at DESC
