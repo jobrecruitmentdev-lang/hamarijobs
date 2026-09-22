@@ -29,6 +29,7 @@ if (isset($seo) && is_array($seo)) {
   <title><?= htmlspecialchars($pageTitle) ?></title>
   <meta name="description" content="<?= htmlspecialchars($pageDesc) ?>">
   <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <!-- Google & Browser Favicon Suite -->
   <link rel="shortcut icon" href="https://hamarijobs.com/favicon.ico">
   <link rel="icon" type="image/x-icon" href="https://hamarijobs.com/favicon.ico">
@@ -40,7 +41,7 @@ if (isset($seo) && is_array($seo)) {
   <meta name="theme-color" content="#dc2626">
 
   <!-- Open Graph / Social Media Tags -->
-  <meta property="og:site_name" content="HamariJobs">
+  <meta property="og:site_name" content="Hamari Jobs">
   <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>">
   <meta property="og:description" content="<?= htmlspecialchars($pageDesc) ?>">
   <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl) ?>">

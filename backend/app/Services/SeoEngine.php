@@ -10,14 +10,14 @@ class SeoEngine {
 
     public const BASE_URL = 'https://hamarijobs.com';
     public const DEFAULT_LOGO = 'https://hamarijobs.com/assets/images/logo.png';
-    public const BRAND_NAME = 'HamariJobs';
+    public const BRAND_NAME = 'Hamari Jobs';
 
     /**
      * Sanitize and format title to ideal search snippet length (50-65 chars).
      */
     public static function formatTitle(string $title): string {
         $title = trim(strip_tags($title));
-        if (!str_contains($title, self::BRAND_NAME)) {
+        if (!str_contains($title, self::BRAND_NAME) && !str_contains($title, 'HamariJobs')) {
             $title .= ' — ' . self::BRAND_NAME;
         }
         return $title;
@@ -38,17 +38,22 @@ class SeoEngine {
      * 1. HOMEPAGE SEO
      */
     public static function getHomeSeo(): array {
-        $title = "Government Jobs 2026 — Verified Recruitment Notifications, Exams & Results";
-        $desc = "India's premier official government recruitment intelligence portal. Real-time official gazette discovery, exam schedules, syllabus weightage, cutoff trends & direct apply links.";
+        $title = "Hamari Jobs (हमारी जॉब्स) — Latest Government Jobs 2026, Sarkari Result & Admit Card";
+        $desc = "Hamari Jobs (hamarijobs.com) is India's verified government recruitment intelligence portal. Real-time official notifications, admit cards, syllabus & results.";
         $canonical = self::BASE_URL . '/';
 
         $schemas = [
             [
                 "@context" => "https://schema.org",
                 "@type" => "WebSite",
+                "@id" => self::BASE_URL . "/#website",
                 "name" => self::BRAND_NAME,
+                "alternateName" => ["HamariJobs", "HamariJobs.com", "हमारी जॉब्स"],
                 "url" => self::BASE_URL,
                 "description" => $desc,
+                "publisher" => [
+                    "@id" => self::BASE_URL . "/#organization"
+                ],
                 "potentialAction" => [
                     "@type" => "SearchAction",
                     "target" => self::BASE_URL . "/government-jobs?q={search_term_string}",
@@ -57,16 +62,69 @@ class SeoEngine {
             ],
             [
                 "@context" => "https://schema.org",
-                "@type" => "Organization",
+                "@type" => ["Organization", "Brand", "GovernmentService"],
+                "@id" => self::BASE_URL . "/#organization",
                 "name" => self::BRAND_NAME,
+                "legalName" => "Hamari Jobs",
+                "alternateName" => ["HamariJobs", "HamariJobs.com", "हमारी जॉब्स"],
                 "url" => self::BASE_URL,
                 "logo" => [
                     "@type" => "ImageObject",
-                    "url" => self::DEFAULT_LOGO
+                    "url" => self::DEFAULT_LOGO,
+                    "width" => 512,
+                    "height" => 512
+                ],
+                "image" => self::DEFAULT_LOGO,
+                "knowsAbout" => [
+                    "https://en.wikipedia.org/wiki/Civil_Services_Examination",
+                    "https://en.wikipedia.org/wiki/Staff_Selection_Commission",
+                    "https://en.wikipedia.org/wiki/Union_Public_Service_Commission",
+                    "https://en.wikipedia.org/wiki/Railway_Recruitment_Control_Board",
+                    "https://en.wikipedia.org/wiki/Institute_of_Banking_Personnel_Selection",
+                    "https://en.wikipedia.org/wiki/Public_service_commission"
                 ],
                 "sameAs" => [
                     "https://twitter.com/HamariJobs",
-                    "https://t.me/HamariJobsOfficial"
+                    "https://t.me/HamariJobsOfficial",
+                    "https://www.linkedin.com/company/hamarijobs"
+                ]
+            ],
+            [
+                "@context" => "https://schema.org",
+                "@type" => "FAQPage",
+                "mainEntity" => [
+                    [
+                        "@type" => "Question",
+                        "name" => "What is Hamari Jobs (हमारी जॉब्स)?",
+                        "acceptedAnswer" => [
+                            "@type" => "Answer",
+                            "text" => "Hamari Jobs (hamarijobs.com) is India's premier verified government recruitment portal providing official notifications, exam schedules, admit cards, answer keys, syllabus, and results."
+                        ]
+                    ],
+                    [
+                        "@type" => "Question",
+                        "name" => "How to find latest Sarkari Naukri notifications on Hamari Jobs?",
+                        "acceptedAnswer" => [
+                            "@type" => "Answer",
+                            "text" => "Visit hamarijobs.com/government-jobs or browse by commission (UPSC, SSC, RRB, IBPS, State PSCs) or qualification (10th pass, 12th pass, Graduate) to access active vacancies with verified gazette references."
+                        ]
+                    ],
+                    [
+                        "@type" => "Question",
+                        "name" => "Does Hamari Jobs provide direct official application links?",
+                        "acceptedAnswer" => [
+                            "@type" => "Answer",
+                            "text" => "Yes, every recruitment on Hamari Jobs includes direct links to official commission portals (.gov.in / .nic.in) along with original gazette notification PDFs."
+                        ]
+                    ],
+                    [
+                        "@type" => "Question",
+                        "name" => "How to download Admit Cards and check Exam Results on Hamari Jobs?",
+                        "acceptedAnswer" => [
+                            "@type" => "Answer",
+                            "text" => "Navigate to hamarijobs.com/admit-cards or hamarijobs.com/results to access real-time hall ticket download servers, category-wise cutoff marks, and merit lists."
+                        ]
+                    ]
                 ]
             ]
         ];

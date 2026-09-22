@@ -28,6 +28,9 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
+User-agent: Claude-Web
+Allow: /
+
 User-agent: anthropic-ai
 Allow: /
 
@@ -37,10 +40,17 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
+User-agent: Meta-ExternalAgent
+Allow: /
+
 User-agent: Bingbot
 Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-# Production XML Master Sitemap
+# Production XML Master Sitemaps
 Sitemap: https://hamarijobs.com/sitemap.xml
+Sitemap: https://hamarijobs.com/sitemap-jobs.xml
+Sitemap: https://hamarijobs.com/sitemap-exams.xml
+Sitemap: https://hamarijobs.com/sitemap-articles.xml
+Sitemap: https://hamarijobs.com/sitemap-commissions.xml

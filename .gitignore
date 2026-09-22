@@ -56,6 +56,7 @@ storage/temp/*
 !storage/temp/.gitkeep
 storage/notifications/*
 !storage/notifications/.gitkeep
+storage/*.json
 *.log
 
 # Node / Frontend (if applicable)

@@ -61,6 +61,16 @@ require_once __DIR__ . '/partials/header.php';
 <!-- 1. Interactive Hero Carousel Section (Red & White Light) -->
 <section class="hero-carousel-section">
   <div class="container">
+    <!-- Semantic Brand H1 Header -->
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <h1 style="font-family: var(--font-heading); font-size: clamp(1.45rem, 3.5vw, 2.15rem); font-weight: 800; color: var(--text-primary); margin: 0; line-height: 1.25;">
+        Hamari Jobs <span style="color: var(--primary-red);">(हमारी जॉब्स)</span> — Government Jobs 2026
+      </h1>
+      <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0.4rem auto 0; max-width: 680px; line-height: 1.5;">
+        India's premier verified government recruitment portal. Real-time official notifications, admit cards, syllabus & exam results.
+      </p>
+    </div>
+
     <div class="carousel-container">
       
       <!-- Carousel Arrow Buttons -->
