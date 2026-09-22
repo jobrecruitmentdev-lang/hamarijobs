@@ -38,7 +38,7 @@ class SeoEngine {
      * 1. HOMEPAGE SEO
      */
     public static function getHomeSeo(): array {
-        $title = "Hamari Jobs (हमारी जॉब्स) — Latest Government Jobs 2026, Sarkari Result & Admit Card";
+        $title = "Hamari Jobs — Latest Government Jobs 2026, Sarkari Result & Admit Card";
         $desc = "Hamari Jobs (hamarijobs.com) is India's verified government recruitment intelligence portal. Real-time official notifications, admit cards, syllabus & results.";
         $canonical = self::BASE_URL . '/';
 
@@ -48,7 +48,7 @@ class SeoEngine {
                 "@type" => "WebSite",
                 "@id" => self::BASE_URL . "/#website",
                 "name" => self::BRAND_NAME,
-                "alternateName" => ["HamariJobs", "HamariJobs.com", "हमारी जॉब्स"],
+                "alternateName" => ["HamariJobs", "HamariJobs.com"],
                 "url" => self::BASE_URL,
                 "description" => $desc,
                 "publisher" => [
@@ -66,7 +66,7 @@ class SeoEngine {
                 "@id" => self::BASE_URL . "/#organization",
                 "name" => self::BRAND_NAME,
                 "legalName" => "Hamari Jobs",
-                "alternateName" => ["HamariJobs", "HamariJobs.com", "हमारी जॉब्स"],
+                "alternateName" => ["HamariJobs", "HamariJobs.com"],
                 "url" => self::BASE_URL,
                 "logo" => [
                     "@type" => "ImageObject",
@@ -95,7 +95,7 @@ class SeoEngine {
                 "mainEntity" => [
                     [
                         "@type" => "Question",
-                        "name" => "What is Hamari Jobs (हमारी जॉब्स)?",
+                        "name" => "What is Hamari Jobs?",
                         "acceptedAnswer" => [
                             "@type" => "Answer",
                             "text" => "Hamari Jobs (hamarijobs.com) is India's premier verified government recruitment portal providing official notifications, exam schedules, admit cards, answer keys, syllabus, and results."

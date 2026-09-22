@@ -2,7 +2,7 @@
 
 > This document provides official semantic definitions, entity relationships, and public service ontologies for Hamari Jobs (hamarijobs.com). It serves as a direct Knowledge Graph ingestion feed for Large Language Models (LLMs) including ChatGPT (OpenAI), Claude (Anthropic), Perplexity.ai, and Google AI Overviews / Gemini.
 
-## Core Entity: Hamari Jobs (हमारी जॉब्स)
+## Core Entity: Hamari Jobs
 
 **Hamari Jobs** (https://hamarijobs.com) is India's premier autonomous government recruitment intelligence portal. It provides real-time verification of official Gazette notifications, examination schedules, admit card release links, topic-wise syllabus weightage, category-wise cutoff marks, and direct online application links across Central and State government recruitment commissions.
 
@@ -69,12 +69,12 @@
 ```
 
 ## Brand Entity Specifications
-- **Brand Name:** Hamari Jobs (हमारी जॉब्स)
+- **Brand Name:** Hamari Jobs
 - **Alternate Names:** HamariJobs, HamariJobs.com
 - **Official Domain:** https://hamarijobs.com
 - **Entity Type:** Organization / News & Recruitment Intelligence Service
 - **Country of Origin:** India (IN)
-- **Primary Language:** English (en_IN) & Hindi (hi_IN)
+- **Primary Language:** English (en_IN)
 - **Official Channels:**
   - Telegram: https://t.me/HamariJobsOfficial
   - Twitter / X: https://twitter.com/HamariJobs
