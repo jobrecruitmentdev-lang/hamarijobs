@@ -26,9 +26,9 @@ if (isset($seo) && is_array($seo)) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($pageTitle) ?></title>
-  <meta name="description" content="<?= htmlspecialchars($pageDesc) ?>">
-  <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+  <title><?= htmlspecialchars($pageTitle, ENT_COMPAT, 'UTF-8') ?></title>
+  <meta name="description" content="<?= htmlspecialchars($pageDesc, ENT_COMPAT, 'UTF-8') ?>">
+  <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl, ENT_COMPAT, 'UTF-8') ?>">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <!-- Google & Browser Favicon Suite -->
   <link rel="shortcut icon" href="https://hamarijobs.com/favicon.ico">
@@ -42,17 +42,17 @@ if (isset($seo) && is_array($seo)) {
 
   <!-- Open Graph / Social Media Tags -->
   <meta property="og:site_name" content="Hamari Jobs">
-  <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>">
-  <meta property="og:description" content="<?= htmlspecialchars($pageDesc) ?>">
-  <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl) ?>">
+  <meta property="og:title" content="<?= htmlspecialchars($pageTitle, ENT_COMPAT, 'UTF-8') ?>">
+  <meta property="og:description" content="<?= htmlspecialchars($pageDesc, ENT_COMPAT, 'UTF-8') ?>">
+  <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl, ENT_COMPAT, 'UTF-8') ?>">
   <meta property="og:type" content="<?= htmlspecialchars($ogType) ?>">
   <meta property="og:image" content="<?= htmlspecialchars($ogImage) ?>">
   <meta property="og:locale" content="en_IN">
 
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="<?= htmlspecialchars($twitterCard) ?>">
-  <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle) ?>">
-  <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc) ?>">
+  <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_COMPAT, 'UTF-8') ?>">
+  <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc, ENT_COMPAT, 'UTF-8') ?>">
   <meta name="twitter:image" content="<?= htmlspecialchars($ogImage) ?>">
 
   <!-- Schema.org JSON-LD Structured Data Injection -->

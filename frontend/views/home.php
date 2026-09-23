@@ -551,4 +551,73 @@ require_once __DIR__ . '/partials/header.php';
   </div>
 </section>
 
+<!-- 6. Portal Authority & Frequently Asked Questions (FAQ) Section -->
+<section id="faq" style="padding: 3.5rem 0 4.5rem; background: var(--bg-subtle); border-top: 1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="max-width: 860px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 2.5rem;">
+        <span class="badge-org" style="margin-bottom: 0.5rem; display: inline-block;">VERIFIED RECRUITMENT INTELLIGENCE</span>
+        <h2 class="section-title" style="margin-bottom: 0.6rem;">
+          Frequently Asked <span>Questions</span>
+        </h2>
+        <p class="section-subtitle">
+          Everything you need to know about Hamari Jobs, official Gazette verifications, and Sarkari examination updates.
+        </p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <!-- FAQ 1 -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.6rem;">
+            What is Hamari Jobs?
+          </h3>
+          <p style="font-size: 0.925rem; color: var(--text-secondary); line-height: 1.65; margin: 0;">
+            <strong>Hamari Jobs</strong> (<a href="https://hamarijobs.com" style="color: var(--primary-red); font-weight: 600;">hamarijobs.com</a>) is India's dedicated government recruitment and examination intelligence portal. We provide verified notifications, examination schedules, admit card release links, topic-wise syllabus weightage, previous year cutoff marks, and direct online application links across Central and State government recruitment commissions.
+          </p>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.6rem;">
+            How is Hamari Jobs different from other job websites?
+          </h3>
+          <p style="font-size: 0.925rem; color: var(--text-secondary); line-height: 1.65; margin: 0;">
+            Unlike general blue-collar apps or unverified portals, Hamari Jobs focuses exclusively on authentic <strong>Central and State Government recruitments (Sarkari Naukri)</strong>. 100% of our recruitment notifications are cross-referenced with official Gazette notifications (.gov.in / .nic.in) before publishing to prevent misleading or expired job listings.
+          </p>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.6rem;">
+            How to find the latest Sarkari Naukri notifications on Hamari Jobs?
+          </h3>
+          <p style="font-size: 0.925rem; color: var(--text-secondary); line-height: 1.65; margin: 0;">
+            Navigate to our <a href="/government-jobs" style="color: var(--primary-red); font-weight: 600;">Government Jobs Directory</a> to filter openings by commission (UPSC, SSC, RRB, IBPS, State PSCs), qualification (10th Pass, 12th Pass, Graduate), state location, or category. Each dossier includes eligibility criteria, pay scales, and critical dates.
+          </p>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.6rem;">
+            Does Hamari Jobs provide direct official application links?
+          </h3>
+          <p style="font-size: 0.925rem; color: var(--text-secondary); line-height: 1.65; margin: 0;">
+            Yes. Every recruitment dossier includes direct links to official commission portals (<code style="background: var(--bg-subtle); padding: 2px 6px; border-radius: 4px;">.gov.in</code> / <code style="background: var(--bg-subtle); padding: 2px 6px; border-radius: 4px;">.nic.in</code>) and authentic Gazette PDF documents, ensuring candidates apply through safe, official channels.
+          </p>
+        </div>
+
+        <!-- FAQ 5 -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.6rem;">
+            How to download Admit Cards and check Exam Results on Hamari Jobs?
+          </h3>
+          <p style="font-size: 0.925rem; color: var(--text-secondary); line-height: 1.65; margin: 0;">
+            Visit our dedicated <a href="/admit-cards" style="color: var(--primary-red); font-weight: 600;">Admit Cards Hub</a> and <a href="/results" style="color: var(--primary-red); font-weight: 600;">Results Portal</a> to access real-time hall ticket download servers, category-wise cutoff marks (UR, OBC, SC, ST, EWS), and final selection merit lists.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <?php require_once __DIR__ . '/partials/footer.php'; ?>

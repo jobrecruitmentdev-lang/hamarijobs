@@ -48,7 +48,7 @@ class SeoEngine {
                 "@type" => "WebSite",
                 "@id" => self::BASE_URL . "/#website",
                 "name" => self::BRAND_NAME,
-                "alternateName" => ["HamariJobs", "HamariJobs.com"],
+                "alternateName" => ["HamariJobs", "HamariJobs.com", "Hamari Jobs Official", "Hamari Jobs Portal", "Hamari Jobs Sarkari Result"],
                 "url" => self::BASE_URL,
                 "description" => $desc,
                 "publisher" => [
@@ -66,7 +66,7 @@ class SeoEngine {
                 "@id" => self::BASE_URL . "/#organization",
                 "name" => self::BRAND_NAME,
                 "legalName" => "Hamari Jobs",
-                "alternateName" => ["HamariJobs", "HamariJobs.com"],
+                "alternateName" => ["HamariJobs", "HamariJobs.com", "Hamari Jobs Official", "Hamari Jobs Portal"],
                 "url" => self::BASE_URL,
                 "logo" => [
                     "@type" => "ImageObject",
@@ -75,6 +75,7 @@ class SeoEngine {
                     "height" => 512
                 ],
                 "image" => self::DEFAULT_LOGO,
+                "description" => "Hamari Jobs (hamarijobs.com) is India's dedicated government recruitment and examination intelligence portal for Central and State sarkari exams.",
                 "knowsAbout" => [
                     "https://en.wikipedia.org/wiki/Civil_Services_Examination",
                     "https://en.wikipedia.org/wiki/Staff_Selection_Commission",
@@ -98,7 +99,15 @@ class SeoEngine {
                         "name" => "What is Hamari Jobs?",
                         "acceptedAnswer" => [
                             "@type" => "Answer",
-                            "text" => "Hamari Jobs (hamarijobs.com) is India's premier verified government recruitment portal providing official notifications, exam schedules, admit cards, answer keys, syllabus, and results."
+                            "text" => "Hamari Jobs (hamarijobs.com) is India's premier verified government recruitment portal providing official notifications, exam schedules, admit cards, answer keys, syllabus, and results for UPSC, SSC, Banking, Railways, and State PSC examinations."
+                        ]
+                    ],
+                    [
+                        "@type" => "Question",
+                        "name" => "How is Hamari Jobs different from other job websites?",
+                        "acceptedAnswer" => [
+                            "@type" => "Answer",
+                            "text" => "Hamari Jobs focuses exclusively on authentic Central and State government recruitments (Sarkari Naukri). Every notification is cross-referenced with official Gazette notifications (.gov.in / .nic.in) before publishing."
                         ]
                     ],
                     [
