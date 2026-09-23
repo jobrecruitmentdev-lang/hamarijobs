@@ -620,7 +620,10 @@ class SeoEngine {
     /**
      * 8. IN-DEPTH EDITORIAL ARTICLE & PREPARATION GUIDE SEO
      */
-    public static function getArticleDetailSeo(array $article, ?array $rec = null): array {
+    public static function getArticleDetailSeo(array $article, $rec = null): array {
+        if (!is_array($rec)) {
+            $rec = null;
+        }
         $title = htmlspecialchars($article['title']);
         $slug = $article['slug'];
         $canonical = self::BASE_URL . "/articles/{$slug}";

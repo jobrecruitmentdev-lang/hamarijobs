@@ -26,7 +26,8 @@ $rec = null;
 if (!empty($article['recruitment_id'])) {
     $recStmt = $db->prepare("SELECT id, title, slug, organization_name, total_vacancies, official_apply_url FROM recruitments WHERE id = ? LIMIT 1");
     $recStmt->execute([$article['recruitment_id']]);
-    $rec = $recStmt->fetch();
+    $recRow = $recStmt->fetch();
+    $rec = is_array($recRow) ? $recRow : null;
 }
 
 require_once __DIR__ . '/../../backend/app/Services/SeoEngine.php';
