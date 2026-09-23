@@ -30,12 +30,13 @@ if (isset($seo) && is_array($seo)) {
   <meta name="description" content="<?= htmlspecialchars($pageDesc, ENT_COMPAT, 'UTF-8') ?>">
   <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl, ENT_COMPAT, 'UTF-8') ?>">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-  <!-- Google & Browser Favicon Suite -->
-  <link rel="shortcut icon" href="https://hamarijobs.com/favicon.ico">
-  <link rel="icon" type="image/x-icon" href="https://hamarijobs.com/favicon.ico">
+  <!-- Google Search & Multi-Device Favicon Suite (48px Multiples) -->
   <link rel="icon" type="image/png" sizes="48x48" href="https://hamarijobs.com/favicon-48x48.png">
   <link rel="icon" type="image/png" sizes="96x96" href="https://hamarijobs.com/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="144x144" href="https://hamarijobs.com/favicon-144x144.png">
   <link rel="icon" type="image/png" sizes="192x192" href="https://hamarijobs.com/web-app-manifest-192x192.png">
+  <link rel="icon" type="image/x-icon" href="https://hamarijobs.com/favicon.ico">
+  <link rel="shortcut icon" href="https://hamarijobs.com/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="https://hamarijobs.com/apple-touch-icon.png">
   <link rel="manifest" href="https://hamarijobs.com/site.webmanifest">
   <meta name="theme-color" content="#dc2626">
