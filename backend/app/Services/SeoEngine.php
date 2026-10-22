@@ -223,13 +223,13 @@ class SeoEngine {
      * 3. SINGLE JOB / GAZETTE RECRUITMENT DOSSIER SEO, GEO & AEO
      */
     public static function getJobDetailSeo(array $rec, array $factsMap = [], array $events = []): array {
-        $org = htmlspecialchars($rec['organization_name'] ?? 'Government of India');
-        $jobTitle = htmlspecialchars($rec['title'] ?? 'Recruitment');
+        $org = strip_tags($rec['organization_name'] ?? 'Government of India');
+        $jobTitle = strip_tags($rec['title'] ?? 'Recruitment');
         $year = $rec['year'] ?: 2026;
         $vacancies = $rec['total_vacancies'] ? number_format($rec['total_vacancies']) : 'Various';
-        $advt = htmlspecialchars($rec['advertisement_number'] ?: 'Official Gazette Notification');
-        $qual = htmlspecialchars($rec['qualification_level'] ?: 'Graduate / 12th Pass as per official notification');
-        $payScale = htmlspecialchars($factsMap['Pay Scale'] ?? 'As per 7th CPC Matrix');
+        $advt = strip_tags($rec['advertisement_number'] ?: 'Official Gazette Notification');
+        $qual = strip_tags($rec['qualification_level'] ?: 'Graduate / 12th Pass as per official notification');
+        $payScale = strip_tags($factsMap['Pay Scale'] ?? 'As per 7th CPC Matrix');
         $applyUrl = htmlspecialchars($rec['official_apply_url'] ?: 'https://gov.in');
         $stateCode = $rec['state_code'] === 'ALL' ? 'All India' : $rec['state_code'];
         $slug = $rec['slug'];
@@ -390,10 +390,10 @@ class SeoEngine {
      * 4. DEDICATED EXAM INTELLIGENCE HUB SEO, GEO & AEO
      */
     public static function getExamDetailSeo(array $exam, array $phases = [], array $patterns = [], array $syllabus = [], array $cutoffs = []): array {
-        $name = htmlspecialchars($exam['name']);
-        $short = htmlspecialchars($exam['short_name']);
-        $body = htmlspecialchars($exam['conducting_body']);
-        $category = htmlspecialchars($exam['category'] ?? 'Competitive Examination');
+        $name = strip_tags($exam['name']);
+        $short = strip_tags($exam['short_name']);
+        $body = strip_tags($exam['conducting_body']);
+        $category = strip_tags($exam['category'] ?? 'Competitive Examination');
         $slug = $exam['slug'];
         $canonical = self::BASE_URL . "/exams/{$slug}";
 
@@ -490,8 +490,8 @@ class SeoEngine {
      * 5. OFFICIAL COMMISSION DOSSIER SEO
      */
     public static function getCommissionDetailSeo(array $comm, array $jobs = [], array $exams = []): array {
-        $name = htmlspecialchars($comm['name']);
-        $short = htmlspecialchars($comm['short_name']);
+        $name = strip_tags($comm['name']);
+        $short = strip_tags($comm['short_name']);
         $slug = $comm['slug'];
         $activeCount = count($jobs);
         $canonical = self::BASE_URL . "/commissions/{$slug}";
@@ -712,10 +712,10 @@ class SeoEngine {
         if (!is_array($rec)) {
             $rec = null;
         }
-        $title = htmlspecialchars($article['title']);
+        $title = strip_tags($article['title']);
         $slug = $article['slug'];
         $canonical = self::BASE_URL . "/articles/{$slug}";
-        $desc = htmlspecialchars($article['excerpt'] ?: mb_substr(strip_tags($article['content']), 0, 155) . '...');
+        $desc = strip_tags($article['excerpt'] ?: mb_substr(strip_tags($article['content']), 0, 155) . '...');
         $datePublished = !empty($article['published_at']) ? date('Y-m-d', strtotime($article['published_at'])) : date('Y-m-d');
 
         // Dynamic AEO Direct-Answer Summary Box
