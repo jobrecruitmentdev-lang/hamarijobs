@@ -24,7 +24,7 @@ def run():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(HOST, port=PORT, username=USER, password=PASS, timeout=20)
         
-        cmd = f"git -C {PATH} fetch origin main && git -C {PATH} reset --hard origin/main"
+        cmd = f"git -C {PATH} fetch origin main && git -C {PATH} reset --hard origin/main && php {PATH}/database/apply_update_live.php"
         stdin, stdout, stderr = ssh.exec_command(cmd)
         exit_code = stdout.channel.recv_exit_status()
         out = stdout.read().decode('utf-8', errors='ignore')

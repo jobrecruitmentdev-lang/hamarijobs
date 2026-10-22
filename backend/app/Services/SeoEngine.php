@@ -441,6 +441,22 @@ class SeoEngine {
                             "@type" => "Answer",
                             "text" => "Major sections typically comprise General Awareness, Quantitative Aptitude, Logical Reasoning, and English Comprehension."
                         ]
+                    ],
+                    [
+                        "@type" => "Question",
+                        "name" => "What are the previous year cutoff marks for {$short}?",
+                        "acceptedAnswer" => [
+                            "@type" => "Answer",
+                            "text" => "Previous year cutoffs vary across categories (UR, OBC, SC, ST, EWS). The multi-year category-wise cutoff records and trends are compiled below in this intelligence hub."
+                        ]
+                    ],
+                    [
+                        "@type" => "Question",
+                        "name" => "How to prepare effectively for {$short} 2026?",
+                        "acceptedAnswer" => [
+                            "@type" => "Answer",
+                            "text" => "Aspirants should focus on syllabus topic weightages, solve previous years' papers (PYQs), practice computer-based mock tests, and maintain high accuracy to avoid negative marking deductions."
+                        ]
                     ]
                 ]
             ],
@@ -483,6 +499,63 @@ class SeoEngine {
         $title = "{$name} ({$short}) Recruitment 2026: Official Notices, Exam Calendar & Jobs";
         $desc = "Official recruitment dossier for {$name}. Track {$activeCount} active job notifications, examination calendar, admit cards, syllabus and direct official portal links.";
 
+        $tldrText = "Official recruitment directory for {$name} ({$short}). Currently tracking {$activeCount} active government job vacancies, online registration deadlines, OTR portals, and gazette notifications. All links verified against official government servers.";
+
+        // Build ItemList of Active Recruitments
+        $jobListItems = [];
+        foreach (array_slice($jobs, 0, 10) as $idx => $jb) {
+            $jobListItems[] = [
+                "@type" => "ListItem",
+                "position" => $idx + 1,
+                "name" => $jb['title'],
+                "url" => self::BASE_URL . "/jobs/" . $jb['slug']
+            ];
+        }
+
+        // Commission Specific FAQs
+        $faqs = [
+            [
+                "@type" => "Question",
+                "name" => "What is the official website of {$name} ({$short})?",
+                "acceptedAnswer" => [
+                    "@type" => "Answer",
+                    "text" => "The official portal for {$short} is " . ($comm['official_website_url'] ?? 'accessible via official government domain') . " where notifications and online forms are published."
+                ]
+            ],
+            [
+                "@type" => "Question",
+                "name" => "How many active recruitments are available under {$short} right now?",
+                "acceptedAnswer" => [
+                    "@type" => "Answer",
+                    "text" => "There are currently {$activeCount} active recruitment notifications released by {$name} verified on HamariJobs."
+                ]
+            ],
+            [
+                "@type" => "Question",
+                "name" => "How to complete One Time Registration (OTR) for {$short} exams?",
+                "acceptedAnswer" => [
+                    "@type" => "Answer",
+                    "text" => "Visit the official {$short} portal, click on OTR Registration, provide your Aadhaar / ID details, matriculation certificate, upload photograph & signature, and generate your lifelong candidate registration ID."
+                ]
+            ],
+            [
+                "@type" => "Question",
+                "name" => "How can I download the {$short} Admit Card and Exam Schedule?",
+                "acceptedAnswer" => [
+                    "@type" => "Answer",
+                    "text" => "Candidates can visit hamarijobs.com/admit-cards to track real-time hall ticket download links and city intimation slips for {$short} competitive exams."
+                ]
+            ],
+            [
+                "@type" => "Question",
+                "name" => "Where are {$short} results and cutoff marks declared?",
+                "acceptedAnswer" => [
+                    "@type" => "Answer",
+                    "text" => "Final selection lists, normalized scorecards, and category-wise cutoffs for {$short} are published on hamarijobs.com/results."
+                ]
+            ]
+        ];
+
         $schemas = [
             [
                 "@context" => "https://schema.org",
@@ -495,6 +568,11 @@ class SeoEngine {
             ],
             [
                 "@context" => "https://schema.org",
+                "@type" => "FAQPage",
+                "mainEntity" => $faqs
+            ],
+            [
+                "@context" => "https://schema.org",
                 "@type" => "BreadcrumbList",
                 "itemListElement" => [
                     ["@type" => "ListItem", "position" => 1, "name" => "Home", "item" => self::BASE_URL . "/"],
@@ -503,6 +581,15 @@ class SeoEngine {
                 ]
             ]
         ];
+
+        if (!empty($jobListItems)) {
+            $schemas[] = [
+                "@context" => "https://schema.org",
+                "@type" => "ItemList",
+                "name" => "Active Recruitments by {$name}",
+                "itemListElement" => $jobListItems
+            ];
+        }
 
         return [
             'title' => self::formatTitle($title),
@@ -514,6 +601,7 @@ class SeoEngine {
             'og_image' => self::DEFAULT_LOGO,
             'og_url' => $canonical,
             'twitter_card' => 'summary',
+            'tldr_box' => $tldrText,
             'schemas' => $schemas
         ];
     }
@@ -630,6 +718,65 @@ class SeoEngine {
         $desc = htmlspecialchars($article['excerpt'] ?: mb_substr(strip_tags($article['content']), 0, 155) . '...');
         $datePublished = !empty($article['published_at']) ? date('Y-m-d', strtotime($article['published_at'])) : date('Y-m-d');
 
+        // Dynamic AEO Direct-Answer Summary Box
+        $orgName = $rec['organization_name'] ?? 'Government of India';
+        $jobTitle = $rec['title'] ?? 'Competitive Examination';
+        $vacancies = !empty($rec['total_vacancies']) ? number_format($rec['total_vacancies']) . ' Vacancies' : 'Announced Posts';
+        $artType = $article['article_type'] ?? 'Preparation Guide';
+        
+        $tldrText = "Official verified guide for {$orgName} {$jobTitle} ({$artType}). Contains gazette notification verification, {$vacancies}, eligibility cutoff dates, syllabus breakdown, and direct application links on official commission servers.";
+
+        // Extract FAQs from article content if present (Markdown ### Q... / Answer)
+        $faqs = [];
+        if (!empty($article['content'])) {
+            if (preg_match_all('/###\s+(?:Q\d*[\.:]?\s*)?(.*?)\n+(?:A\d*[\.:]?\s*)?([^\n#]+)/i', $article['content'], $faqMatches, PREG_SET_ORDER)) {
+                foreach (array_slice($faqMatches, 0, 5) as $fm) {
+                    $q = trim(strip_tags($fm[1]));
+                    $a = trim(strip_tags($fm[2]));
+                    if (strlen($q) > 8 && strlen($a) > 15) {
+                        $faqs[] = [
+                            "@type" => "Question",
+                            "name" => $q,
+                            "acceptedAnswer" => [
+                                "@type" => "Answer",
+                                "text" => $a
+                            ]
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Fallback default FAQs if not enough extracted
+        if (count($faqs) < 3) {
+            $faqs = [
+                [
+                    "@type" => "Question",
+                    "name" => "What is the primary focus of this {$orgName} {$jobTitle} guide?",
+                    "acceptedAnswer" => [
+                        "@type" => "Answer",
+                        "text" => "This official guide provides a verified editorial breakdown of {$orgName} {$jobTitle} covering notification mandates, category-wise eligibility criteria, and examination patterns."
+                    ]
+                ],
+                [
+                    "@type" => "Question",
+                    "name" => "Where can candidates verify this official recruitment information?",
+                    "acceptedAnswer" => [
+                        "@type" => "Answer",
+                        "text" => "All facts in this dossier are directly referenced from official Government of India gazette notifications and official {$orgName} web portals."
+                    ]
+                ],
+                [
+                    "@type" => "Question",
+                    "name" => "Are the application links in this guide authentic?",
+                    "acceptedAnswer" => [
+                        "@type" => "Answer",
+                        "text" => "Yes, all application buttons and registration URLs redirect exclusively to verified official government (.gov.in / .nic.in) servers."
+                    ]
+                ]
+            ];
+        }
+
         $schemas = [
             [
                 "@context" => "https://schema.org",
@@ -657,6 +804,11 @@ class SeoEngine {
             ],
             [
                 "@context" => "https://schema.org",
+                "@type" => "FAQPage",
+                "mainEntity" => $faqs
+            ],
+            [
+                "@context" => "https://schema.org",
                 "@type" => "BreadcrumbList",
                 "itemListElement" => [
                     ["@type" => "ListItem", "position" => 1, "name" => "Home", "item" => self::BASE_URL . "/"],
@@ -676,6 +828,7 @@ class SeoEngine {
             'og_image' => self::DEFAULT_LOGO,
             'og_url' => $canonical,
             'twitter_card' => 'summary_large_image',
+            'tldr_box' => $tldrText,
             'schemas' => $schemas
         ];
     }
