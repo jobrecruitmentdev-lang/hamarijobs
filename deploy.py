@@ -2,6 +2,8 @@ import sys
 import subprocess
 import paramiko
 
+sys.stdout.reconfigure(encoding='utf-8')
+
 def run():
     print("================================================================")
     print("   HAMARIJOBS - 1-CLICK PRODUCTION DEPLOYMENT TO HOSTINGER")
