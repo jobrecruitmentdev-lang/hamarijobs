@@ -6,7 +6,7 @@ class JobArticleGenerator {
     /**
      * Generate an exhaustive 2100 to 2500 words long-form SEO blog article for a recruitment notice.
      * Incorporates commission-specific topic modules, 4 to 6 randomized context-aware FAQs,
-     * and STRICTLY 3 natural in-text contextual backlinks pointing to https://jobrecruitment.in/
+     * and strictly internal contextual links pointing to HamariJobs hubs and categories.
      *
      * @param array $rec Job / Recruitment row from DB
      * @param array $factsMap Map of verified fact claims
@@ -79,7 +79,7 @@ class JobArticleGenerator {
             <span>✓ Verified Recruitment Insights</span>
           </div>
           <p class="job-article-lead">
-            The <strong>' . $org . '</strong> has officially published the recruitment notice for <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">' . $title . '</a> under advertisement reference <strong>' . $advt . '</strong>. This employment notification invites applications for a total of <strong>' . $vacancies . '</strong> across various departments, ministries, and regional offices. To support serious aspirants in their career planning, this comprehensive long-form guide provides an in-depth breakdown of eligibility standards, educational degrees, age relaxation norms, pay scales, multi-tier exam formats, subject syllabi, normalization rules, previous year cutoff trends, and a structured 90-day study strategy.
+            The <strong>' . $org . '</strong> has officially published the recruitment notice for <a href="/government-jobs" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">' . $title . '</a> under advertisement reference <strong>' . $advt . '</strong>. This employment notification invites applications for a total of <strong>' . $vacancies . '</strong> across various departments, ministries, and regional offices. To support serious aspirants in their career planning, this comprehensive long-form guide provides an in-depth breakdown of eligibility standards, educational degrees, age relaxation norms, pay scales, multi-tier exam formats, subject syllabi, category cutoff trends, and a proven study roadmap.
           </p>
         </div>';
 
@@ -196,7 +196,7 @@ class JobArticleGenerator {
           <div style="background: var(--bg-subtle); border-left: 4px solid var(--primary-ruby); padding: 1rem 1.25rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 1.5rem 0;">
             <strong style="color: var(--primary-ruby); font-size: 0.95rem;">💡 Useful Recruitment Advisory:</strong>
             <p style="font-size: 0.875rem; line-height: 1.7; color: var(--text-secondary); margin: 0.35rem 0 0;">
-              Candidates seeking real-time <a href="https://jobrecruitment.in/" target="_blank" rel="noopener" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Government Job Recruitment</a> updates, notification PDFs, and syllabus analysis can review the complete eligibility guidelines before applying.
+              Candidates seeking real-time <a href="/government-jobs" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Government Job Recruitment</a> updates, official gazette PDFs, and syllabus analysis can explore active openings and category hubs on HamariJobs.
             </p>
           </div>
         </div>';
@@ -290,26 +290,8 @@ class JobArticleGenerator {
         // Section 7: Commission-Specific Micro-Topic Syllabus Module
         $html .= $syllabusModule;
 
-        // Section 8: Normalization Formula & Tie-Breaking Rules
-        $html .= '
-        <div class="job-article-section">
-          <h3 class="job-article-heading">⚖️ 8. Score Normalization Formula & Tie-Breaking Principles</h3>
-          <p class="job-article-text">
-            When recruitment examinations take place across multiple sessions and test shifts, minor variations in question paper difficulty are addressed through standardized mathematical normalization formulas:
-          </p>
-          <div style="background: #0f172a; color: #f8fafc; padding: 1.5rem; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.8; margin: 1.25rem 0;">
-            Normalized Score ($M_{ij}$) = $\frac{\bar{M}_t^g - M_q^g}{\bar{M}_{ti} - M_{iq}} \times (M_{ij} - M_{iq}) + M_q^g$<br>
-            <span style="color: #94a3b8; font-size: 0.775rem;">Formula ensures statistical parity across all exam shifts and batches.</span>
-          </div>
-          <p class="job-article-text">
-            <strong>Tie-Breaking Resolution Hierarchy:</strong> If two or more candidates secure the same normalized aggregate score, ties are resolved in the following sequence:
-          </p>
-          <ol class="job-article-ol">
-            <li><strong>Sectional Marks:</strong> Higher score in the primary domain paper or core technical section.</li>
-            <li><strong>Age Priority:</strong> The candidate older in age is ranked higher on the merit list.</li>
-            <li><strong>Alphabetical Order:</strong> Alphabetical order of candidate names as per their 10th/Matriculation certificate.</li>
-          </ol>
-        </div>';
+        // Section 8: Commission-Specific Evaluation, Normalization or Fitness Benchmarks
+        $html .= self::buildExamEvaluationSection($commissionType, $title);
 
         // Section 9: Historical Cutoff Trends & Safe Target Scores
         $html .= '
@@ -526,38 +508,137 @@ class JobArticleGenerator {
     }
 
     /**
-     * Build 90-Day Proven Preparation Roadmap (BACKLINK 3 EMBEDDED CONTEXTUALLY)
+     * Build Commission-specific exam evaluation, normalization or fitness criteria section
+     */
+    private static function buildExamEvaluationSection(string $type, string $title): string {
+        $html = '<div class="job-article-section">';
+
+        if ($type === 'UPSC') {
+            $html .= '<h3 class="job-article-heading">⚖️ 8. Preliminary Screening Criteria & Mains Evaluation Standards</h3>';
+            $html .= '<p class="job-article-text">The selection for <strong>' . $title . '</strong> follows rigorous qualitative evaluation guidelines set by the Union Public Service Commission:</p>';
+            $html .= '
+            <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; margin: 1.25rem 0;">
+              <ul style="margin: 0; padding-left: 1.25rem; line-height: 1.8; color: var(--text-secondary); font-size: 0.9rem;">
+                <li><strong>Prelims Paper-II (CSAT):</strong> Qualifying in nature requiring a mandatory minimum of 33% (66 marks out of 200).</li>
+                <li><strong>Prelims Paper-I (GS):</strong> Determines shortlisting for the Mains stage based on category cutoffs.</li>
+                <li><strong>Mains Evaluation:</strong> Nine subjective papers where Indian Language (Paper A) and English (Paper B) are qualifying (25% threshold), while merit is calculated from Essay + 4 GS Papers + 2 Optional Papers (1,750 Marks total).</li>
+                <li><strong>Personality Test:</strong> 275-mark board interview evaluating intellectual caliber, social traits, and administrative aptitude.</li>
+              </ul>
+            </div>';
+        } elseif ($type === 'DEFENCE') {
+            $html .= '<h3 class="job-article-heading">⚖️ 8. Physical Fitness Standards & SSB Interview Matrix</h3>';
+            $html .= '<p class="job-article-text">Candidates applying for <strong>' . $title . '</strong> must satisfy mandatory physical and psychological evaluation benchmarks:</p>';
+            $html .= '
+            <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; margin: 1.25rem 0;">
+              <ul style="margin: 0; padding-left: 1.25rem; line-height: 1.8; color: var(--text-secondary); font-size: 0.9rem;">
+                <li><strong>Written Examination:</strong> Tests domain mathematics, English proficiency, and general defense awareness.</li>
+                <li><strong>5-Day Services Selection Board (SSB):</strong> Multi-stage assessment including Officer Intelligence Rating (OIR), Picture Perception & Description Test (PPDT), Psychological Batteries, Group Testing Officer (GTO) grounds, and Personal Interview.</li>
+                <li><strong>Medical Board Clearance:</strong> Strict evaluation of visual acuity, anthropometric measurements, and surgical fitness by Military Medical Boards.</li>
+              </ul>
+            </div>';
+        } elseif ($type === 'STATE_PSC') {
+            $html .= '<h3 class="job-article-heading">⚖️ 8. State Domicile Rules, Cutoff Thresholds & Tie-Breaking Principles</h3>';
+            $html .= '<p class="job-article-text">Assessment benchmarks and statutory cadre reservation rules for <strong>' . $title . '</strong>:</p>';
+            $html .= '
+            <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; margin: 1.25rem 0;">
+              <ul style="margin: 0; padding-left: 1.25rem; line-height: 1.8; color: var(--text-secondary); font-size: 0.9rem;">
+                <li><strong>Domicile & Category Quotas:</strong> Reserved category benefits (OBC/SC/ST/EWS/Females) apply strictly to permanent residents with valid state certificates; candidates from other states are considered under General/Open merit.</li>
+                <li><strong>Preliminary Screening:</strong> Serves as a qualifying gateway with standard 1/3rd negative marking per incorrect response.</li>
+                <li><strong>Tie-Breaking Order:</strong> Candidates securing identical aggregate marks are ranked by sectional marks, followed by age priority (elder candidate ranked higher), and finally 10th marksheet certificate seniority.</li>
+              </ul>
+            </div>';
+        } else {
+            // SSC, RAILWAY, BANKING, GENERAL
+            $html .= '<h3 class="job-article-heading">⚖️ 8. Multi-Shift CBT Score Normalization & Tie-Breaking Rules</h3>';
+            $html .= '<p class="job-article-text">When examinations for <strong>' . $title . '</strong> are administered across multiple test shifts, difficulty variances are balanced through equi-percentile statistical normalization:</p>';
+            $html .= '
+            <div style="background: #0f172a; color: #f8fafc; padding: 1.5rem; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.8; margin: 1.25rem 0;">
+              Normalized Score ($M_{ij}$) = $\frac{\bar{M}_t^g - M_q^g}{\bar{M}_{ti} - M_{iq}} \times (M_{ij} - M_{iq}) + M_q^g$<br>
+              <span style="color: #94a3b8; font-size: 0.775rem;">Formula ensures mathematical fairness across different shift papers.</span>
+            </div>
+            <ol class="job-article-ol">
+              <li><strong>Sectional Performance:</strong> Higher score in the core subject/technical paper.</li>
+              <li><strong>Date of Birth:</strong> Candidate older in age is placed higher on the merit list.</li>
+              <li><strong>Alphabetical Order:</strong> Alphabetical priority of candidate name as registered in the matriculation gazette.</li>
+            </ol>';
+        }
+
+        $html .= '</div>';
+        return $html;
+    }
+
+    /**
+     * Build 90-Day Proven Preparation Roadmap tailored to commission type
      */
     private static function buildPreparationRoadmap(string $type, string $title): string {
         $html = '<div class="job-article-section">';
         $html .= '<h3 class="job-article-heading">🗓️ 10. 90-Day Structured Preparation Strategy & Study Roadmap</h3>';
-        $html .= '<p class="job-article-text">Preparing for <strong>' . $title . '</strong> requires a consistent, phased routine. Here is an effective 3-phase study roadmap:</p>';
+        $html .= '<p class="job-article-text">Systematic preparation for <strong>' . $title . '</strong> requires a disciplined, phase-wise study routine. Follow this tailored 3-phase strategic roadmap:</p>';
+
+        if ($type === 'UPSC') {
+            $p1Title = "Phase 1: NCERT Foundations, Core Textbooks & Daily Current Affairs (Days 1 – 35)";
+            $p1Text  = "Read NCERTs (Class 6 to 12) for Polity, Modern History, Geography, and Basic Economics. Establish a strict routine of reading The Hindu or Indian Express alongside PIB summaries. Prepare concise one-page notes for static subjects.";
+            $p2Title = "Phase 2: GS Syllabus Mastery, Optional Subject & Answer Writing (Days 36 – 65)";
+            $p2Text  = "Integrate static syllabus topics with contemporary national/international developments. Dedicate 3 hours daily to your Optional Subject. Practice writing 2 structured subjective answers daily with clear introductions, diagrams, and conclusions.";
+            $p3Title = "Phase 3: Simulated Prelims Mocks, CSAT Practice & High-Yield Revision (Days 66 – 90)";
+            $p3Text  = "Attempt 40+ full-length GS-1 test series under strict 2-hour exam conditions. Practice CSAT comprehension and reasoning weekly to secure the 33% qualifying threshold. Revise micro-notes, government reports, and economic surveys.";
+        } elseif ($type === 'BANKING') {
+            $p1Title = "Phase 1: Speed Arithmetic, Vedic Maths & Reasoning Puzzles (Days 1 – 35)";
+            $p1Text  = "Master calculation shortcuts, square/cube tables up to 30, and percentage-fraction conversions. Solve 5 floor, circular, and linear puzzles daily. Clear grammar basics for error spotting and sentence correction.";
+            $p2Title = "Phase 2: High-Level Data Interpretation & Financial Awareness (Days 36 – 65)";
+            $p2Text  = "Practice complex Caselet DI, Radar DI, and Bar Graphs daily. Follow monthly banking awareness capsules, RBI circular summaries, and current economic indices. Solve previous year sectional papers with a timer.";
+            $p3Title = "Phase 3: Full-Length Speed Mocks & Accuracy Tuning (Days 66 – 90)";
+            $p3Text  = "Attempt 2 timed full-length online mocks daily. Analyze question selection strategy to maximize positive attempts while eliminating negative marking penalties. Revise 6 months of current banking affairs.";
+        } elseif ($type === 'RAILWAY') {
+            $p1Title = "Phase 1: General Science Fundamentals & Basic Mathematics (Days 1 – 35)";
+            $p1Text  = "Focus intensely on Class 9 and 10 Physics, Chemistry, and Biology fundamentals. Complete arithmetic chapters: Number Systems, Time & Work, Speed & Distance, and Percentages with handwritten formula sheets.";
+            $p2Title = "Phase 2: Technical Domain Knowledge & Previous 10 Years Shift Papers (Days 36 – 65)";
+            $p2Text  = "Solve all previous RRB NTPC/Group D shift questions topic-wise. Master non-verbal reasoning, coding-decoding, and Venn diagrams. Review railway-specific facts and national achievements.";
+            $p3Title = "Phase 3: Computer-Based Test (CBT) Simulation & Speed Drills (Days 66 – 90)";
+            $p3Text  = "Practice 90-minute full computer mocks on a laptop or desktop screen to build screen-reading stamina. Revisit weak calculation areas and prioritize high-accuracy sectional attempts.";
+        } elseif ($type === 'DEFENCE') {
+            $p1Title = "Phase 1: Written Syllabus Coverage & Daily Physical Training (Days 1 – 35)";
+            $p1Text  = "Cover intermediate mathematics (Algebra, Trigonometry, Calculus) and General Ability English grammar. Simultaneously maintain morning physical fitness routines: 1.6 km run, push-ups, chin-ups, and core strength.";
+            $p2Title = "Phase 2: General Awareness, OIR Practice & Current Affairs (Days 36 – 65)";
+            $p2Text  = "Study Indian defense apparatus, international relations, modern history, and physical geography. Practice Officer Intelligence Rating (OIR) test sets and Picture Perception & Discussion (PPDT) stories.";
+            $p3Title = "Phase 3: Mock Papers, Personal Interview Skills & Medical Readiness (Days 66 – 90)";
+            $p3Text  = "Solve full-length past papers with negative marking checks. Practice speaking fluently on current national issues for Lecturette and Group Discussions. Ensure body mass index (BMI) and medical parameters are within norms.";
+        } elseif ($type === 'STATE_PSC') {
+            $p1Title = "Phase 1: State History, Geography, Culture & Administrative Polity (Days 1 – 35)";
+            $p1Text  = "Exhaustively cover state-specific history, tribal cultures, geographical landmarks, river systems, and state legislative acts. Read the state economic survey, state budget, and flagship welfare schemes.";
+            $p2Title = "Phase 2: Core General Studies & Previous Question Papers (Days 36 – 65)";
+            $p2Text  = "Integrate Indian Constitution, Modern History, and Geography with state perspective. Solve past 10 years state public service commission preliminary question papers to identify high-recurrence themes.";
+            $p3Title = "Phase 3: Full-Length Mocks & Descriptive Answer Drafting (Days 66 – 90)";
+            $p3Text  = "Take 25+ simulated preliminary tests. Practice time management to cover all 150 questions comfortably. For state-language papers, practice essay writing, translation, and official letter drafting.";
+        } else {
+            // SSC & GENERAL
+            $p1Title = "Phase 1: Foundational Quantitative Aptitude & English Grammar (Days 1 – 35)";
+            $p1Text  = "Dedicate 6 to 8 hours daily to master arithmetic shortcuts, grammar rules (Subject-Verb Agreement, Tenses, Prepositions), and logical reasoning patterns. Keep handwritten formula cards for daily revision.";
+            $p2Title = "Phase 2: Chapter-Wise Drills & Previous 5 Years Official Papers (Days 36 – 65)";
+            $p2Text  = "Solve all questions asked in recent commission exams shift-wise. Identify high-weightage topics like Geometry, Trigonometry, Comprehension, and Static GK. Master reasoning shortcuts.";
+            $p3Title = "Phase 3: Full-Length CBT Tests, Speed Tuning & Error Reduction (Days 66 – 90)";
+            $p3Text  = "Attempt full-length timed mock tests daily under exact exam hours. Focus on reaching a 160+ target score with under 5% error rates. Practice basic keyboard typing speed for post-exam qualifying requirements.";
+        }
 
         $html .= '
         <div style="display: flex; flex-direction: column; gap: 1.25rem; margin: 1.25rem 0;">
           <div style="background: var(--bg-subtle); border-left: 4px solid var(--primary-ruby); padding: 1.25rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;">
-            <div style="font-weight: 800; color: var(--primary-ruby); font-size: 1rem; margin-bottom: 0.25rem;">Phase 1: Foundational Concepts & Syllabus Coverage (Days 1 – 35)</div>
-            <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.65;">
-              Dedicate 6 to 8 hours daily to master foundational subjects. Prepare concise handwritten formula sheets and shortcut notes. Follow reliable daily news sources for ongoing national current events.
-            </p>
+            <div style="font-weight: 800; color: var(--primary-ruby); font-size: 1rem; margin-bottom: 0.25rem;">' . $p1Title . '</div>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.65;">' . $p1Text . '</p>
           </div>
           <div style="background: var(--bg-subtle); border-left: 4px solid #f59e0b; padding: 1.25rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;">
-            <div style="font-weight: 800; color: #d97706; font-size: 1rem; margin-bottom: 0.25rem;">Phase 2: Chapter-Wise Practice & Previous Year Papers (Days 36 – 65)</div>
-            <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.65;">
-              Solve topic-wise problem sets daily. Analyze previous 5 years official question papers (PYQs) to understand difficulty trends and identify high-weightage chapters.
-            </p>
+            <div style="font-weight: 800; color: #d97706; font-size: 1rem; margin-bottom: 0.25rem;">' . $p2Title . '</div>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.65;">' . $p2Text . '</p>
           </div>
           <div style="background: var(--bg-subtle); border-left: 4px solid var(--emerald); padding: 1.25rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;">
-            <div style="font-weight: 800; color: var(--emerald); font-size: 1rem; margin-bottom: 0.25rem;">Phase 3: Full-Length Mock Tests & Revision (Days 66 – 90)</div>
-            <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.65;">
-              Attempt full-length timed mock tests every alternate day. Spend adequate time analyzing errors, improving speed, and refining negative marking management.
-            </p>
+            <div style="font-weight: 800; color: var(--emerald); font-size: 1rem; margin-bottom: 0.25rem;">' . $p3Title . '</div>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.65;">' . $p3Text . '</p>
           </div>
         </div>
         <div style="background: var(--bg-subtle); border-left: 4px solid var(--emerald); padding: 1rem 1.25rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 1.5rem 0;">
-          <strong style="color: var(--emerald); font-size: 0.95rem;">📚 Additional Exam Preparation Resources:</strong>
+          <strong style="color: var(--emerald); font-size: 0.95rem;">📚 Exam Hubs & Hall Tickets:</strong>
           <p style="font-size: 0.875rem; line-height: 1.7; color: var(--text-secondary); margin: 0.35rem 0 0;">
-            For continuous tracking of upcoming government exams, admit card release dates, and previous year question trends, aspirants can rely on verified national recruitment portals for timely notifications and updates.
+            For continuous tracking of upcoming government exams, check the dedicated <a href="/exams" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Exam Hubs</a> and download verified hall tickets at <a href="/admit-cards" style="color: var(--primary-red); font-weight: 700; text-decoration: underline;">Admit Cards</a>.
           </p>
         </div>';
 
@@ -569,15 +650,27 @@ class JobArticleGenerator {
      * Smart Context-Aware Selection of 4 to 6 Unique FAQs
      */
     private static function selectRandomFaqs(int $jobId, string $type, string $title, string $lastDate, string $payScale, string $advt, string $qual): array {
-        // Pool of 25+ curated authentic FAQs
+        // Pool of curated authentic FAQs with bilingual search triggers
         $allFaqs = [
             [
-                'q' => "What is the official closing date for online applications for {$title}?",
+                'q' => "What is the official closing date for online applications for {$title} (आवेदन की अंतिम तिथि)?",
                 'a' => "The online application window closes on <strong>{$lastDate} (23:59 hrs)</strong>. Applicants are advised to complete fee payments well before the deadline."
             ],
             [
-                'q' => "What is the monthly salary structure and pay level for {$title}?",
+                'q' => "What is the monthly salary structure and pay level for {$title} (वेतनमान)?",
                 'a' => "Appointed candidates receive remuneration under <strong>{$payScale}</strong> with basic pay plus DA, HRA, Transport Allowance, and medical benefits."
+            ],
+            [
+                'q' => "What is the educational qualification required for {$title} (शैक्षणिक योग्यता)?",
+                'a' => "Candidates must possess: <strong>{$qual}</strong> from a recognized institution or university by the notified closing date."
+            ],
+            [
+                'q' => "What are the permissible age relaxation limits for OBC, SC, and ST applicants (आयु सीमा एवं छूट)?",
+                'a' => "The upper age limit is relaxed by <strong>5 years for SC/ST</strong> candidates, <strong>3 years for OBC (Non-Creamy Layer)</strong>, and <strong>10 to 15 years for PwBD</strong> aspirants."
+            ],
+            [
+                'q' => "Where can candidates download the official notification PDF for {$title} (ऑफिशियल नोटिफिकेशन डाउनलोड)?",
+                'a' => "The original gazette notification PDF and direct online application links are published and verified on HamariJobs with direct access to official commission portals."
             ],
             [
                 'q' => "Is there negative marking applicable in the computer-based preliminary test?",
@@ -586,10 +679,6 @@ class JobArticleGenerator {
             [
                 'q' => "Can final year degree students submit online applications for {$title}?",
                 'a' => "Applicants must possess their passing certificate or final marksheet on or before the crucial closing date ({$lastDate}) specified in notification {$advt}."
-            ],
-            [
-                'q' => "What are the permissible age relaxation limits for OBC, SC, and ST applicants?",
-                'a' => "The upper age limit is relaxed by <strong>5 years for SC/ST</strong> candidates, <strong>3 years for OBC (Non-Creamy Layer)</strong>, and <strong>10 to 15 years for PwBD</strong> aspirants."
             ],
             [
                 'q' => "What is the One-Time Registration (OTR) procedure and is it mandatory?",

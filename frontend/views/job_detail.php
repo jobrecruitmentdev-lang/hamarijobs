@@ -8,15 +8,36 @@ use App\Services\JobArticleGenerator;
 $slug = $_GET['slug'] ?? '';
 $db = Database::getConnection();
 
+// 301 Normalize: If URL contains duplicated year (e.g. -2026-2026), redirect to clean URL
+$cleanSlug = preg_replace('/-(202[0-9])-(202[0-9])/', '-$1', $slug);
+if ($cleanSlug !== $slug && !empty($cleanSlug)) {
+    header("Location: /jobs/" . $cleanSlug, true, 301);
+    exit;
+}
+
+// 1. Try exact slug match
 $stmt = $db->prepare("SELECT * FROM recruitments WHERE slug = ? LIMIT 1");
 $stmt->execute([$slug]);
 $rec = $stmt->fetch();
 
+// 2. If not found, try matching with double year (in case DB has -2026-2026)
 if (!$rec) {
-    // Fallback match
-    $stmt = $db->prepare("SELECT * FROM recruitments WHERE title LIKE ? LIMIT 1");
-    $stmt->execute(["%{$slug}%"]);
+    $altSlug = preg_replace('/-(202[0-9])$/', '-$1-$1', $slug);
+    $stmt = $db->prepare("SELECT * FROM recruitments WHERE slug = ? LIMIT 1");
+    $stmt->execute([$altSlug]);
     $rec = $stmt->fetch();
+}
+
+// 3. Fallback match by keywords or partial slug
+if (!$rec) {
+    $cleanKeywords = str_replace(['-', '_'], ' ', $slug);
+    $words = array_filter(explode(' ', $cleanKeywords), fn($w) => strlen($w) > 3 && !is_numeric($w));
+    if (!empty($words)) {
+        $searchTerms = '%' . implode('%', array_slice($words, 0, 3)) . '%';
+        $stmt = $db->prepare("SELECT * FROM recruitments WHERE title LIKE ? OR organization_name LIKE ? LIMIT 1");
+        $stmt->execute([$searchTerms, $searchTerms]);
+        $rec = $stmt->fetch();
+    }
 }
 
 if (!$rec) {

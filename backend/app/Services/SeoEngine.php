@@ -13,14 +13,86 @@ class SeoEngine {
     public const BRAND_NAME = 'Hamari Jobs';
 
     /**
-     * Sanitize and format title to ideal search snippet length (50-65 chars).
+     * Map full government organization names to universally recognized abbreviations.
+     */
+    public static function getShortOrgName(string $org): string {
+        $org = trim(strip_tags($org));
+        $map = [
+            'Staff Selection Commission' => 'SSC',
+            'Union Public Service Commission' => 'UPSC',
+            'Railway Recruitment Board' => 'RRB',
+            'Railway Recruitment Cell' => 'RRC',
+            'Institute of Banking Personnel Selection' => 'IBPS',
+            'State Bank of India' => 'SBI',
+            'Reserve Bank of India' => 'RBI',
+            'Defence Research and Development Organisation' => 'DRDO',
+            'Indian Air Force' => 'IAF',
+            'Indian Army' => 'Indian Army',
+            'Indian Navy' => 'Indian Navy',
+            'Railway Protection Force' => 'RPF',
+            'Central Reserve Police Force' => 'CRPF',
+            'Border Security Force' => 'BSF',
+            'Central Industrial Security Force' => 'CISF',
+            'Indo-Tibetan Border Police' => 'ITBP',
+            'Sashastra Seema Bal' => 'SSB',
+            'Uttar Pradesh Public Service Commission' => 'UPPSC',
+            'Bihar Public Service Commission' => 'BPSC',
+            'Gujarat Public Service Commission' => 'GPSC',
+            'Rajasthan Public Service Commission' => 'RPSC',
+            'Madhya Pradesh Public Service Commission' => 'MPPSC',
+            'Maharashtra Public Service Commission' => 'MPSC',
+            'Haryana Staff Selection Commission' => 'HSSC',
+            'Delhi Subordinate Services Selection Board' => 'DSSSB'
+        ];
+        return $map[$org] ?? $org;
+    }
+
+    /**
+     * Clean verbose and duplicated exam titles for high CTR search snippets.
+     */
+    public static function cleanJobTitle(string $title, string $shortOrg): string {
+        $title = trim(strip_tags($title));
+        if (str_starts_with(strtolower($title), strtolower($shortOrg) . ' ')) {
+            $title = substr($title, strlen($shortOrg) + 1);
+        }
+        $replaces = [
+            'Combined Graduate Level (CGL) Examination' => 'CGL',
+            'Combined Graduate Level Examination' => 'CGL',
+            'Combined Higher Secondary (10+2) Level Examination' => 'CHSL (10+2)',
+            'Multi Tasking (Non-Technical) Staff Examination' => 'MTS',
+            'Civil Services Examination' => 'Civil Services (IAS/IFS)',
+            'Civil Services Preliminary Examination' => 'Civil Services Prelims',
+            'National Defence Academy & Naval Academy Examination' => 'NDA & NA',
+            'Combined Defence Services Examination' => 'CDS',
+            'Non-Technical Popular Categories (NTPC)' => 'NTPC',
+            'Non-Technical Popular Categories' => 'NTPC',
+            'Air Force Common Admission Test' => 'AFCAT',
+            'Probationary Officers / Management Trainees' => 'PO / MT',
+            'Probationary Officers' => 'PO',
+            'Junior Associates (Customer Support & Sales)' => 'Clerk (Junior Associate)',
+            'Combined State / Upper Subordinate Services' => 'PCS'
+        ];
+        foreach ($replaces as $find => $repl) {
+            if (stripos($title, $find) !== false) {
+                $title = str_ireplace($find, $repl, $title);
+            }
+        }
+        $title = preg_replace('/\s+202[0-9]$/', '', $title);
+        return trim($title);
+    }
+
+    /**
+     * Sanitize and format title to ideal search snippet length (50-68 chars).
      */
     public static function formatTitle(string $title): string {
         $title = trim(strip_tags($title));
-        if (!str_contains($title, self::BRAND_NAME) && !str_contains($title, 'HamariJobs')) {
-            $title .= ' — ' . self::BRAND_NAME;
+        if (str_contains($title, 'HamariJobs') || str_contains($title, 'Hamari Jobs')) {
+            return $title;
         }
-        return $title;
+        if (mb_strlen($title) > 52) {
+            return $title . ' | HamariJobs';
+        }
+        return $title . ' — ' . self::BRAND_NAME;
     }
 
     /**
@@ -177,8 +249,8 @@ class SeoEngine {
             $prefix = "{$q} Government Jobs 2026";
         }
 
-        $title = "{$prefix}: Active Vacancies, Gazette Notifications & Online Form";
-        $desc = "Browse verified {$prefix}. Check category-wise age limit, salary pay matrix, educational eligibility and direct online application links.";
+        $title = "{$prefix}: Latest Vacancies & Apply Online";
+        $desc = "Find verified {$prefix} (सरकारी नौकरी). Check educational eligibility (योग्यता), age limit, salary & direct online application forms on HamariJobs.";
         $canonical = $customPath ? (self::BASE_URL . $customPath) : (self::BASE_URL . '/government-jobs');
 
         if ($page > 1) {
@@ -224,7 +296,9 @@ class SeoEngine {
      */
     public static function getJobDetailSeo(array $rec, array $factsMap = [], array $events = []): array {
         $org = strip_tags($rec['organization_name'] ?? 'Government of India');
+        $shortOrg = self::getShortOrgName($org);
         $jobTitle = strip_tags($rec['title'] ?? 'Recruitment');
+        $cleanTitle = self::cleanJobTitle($jobTitle, $shortOrg);
         $year = $rec['year'] ?: 2026;
         $vacancies = $rec['total_vacancies'] ? number_format($rec['total_vacancies']) : 'Various';
         $advt = strip_tags($rec['advertisement_number'] ?: 'Official Gazette Notification');
@@ -232,8 +306,8 @@ class SeoEngine {
         $payScale = strip_tags($factsMap['Pay Scale'] ?? 'As per 7th CPC Matrix');
         $applyUrl = htmlspecialchars($rec['official_apply_url'] ?: 'https://gov.in');
         $stateCode = $rec['state_code'] === 'ALL' ? 'All India' : $rec['state_code'];
-        $slug = $rec['slug'];
-        $canonical = self::BASE_URL . "/jobs/{$slug}";
+        $cleanSlug = preg_replace('/-(202[0-9])-(202[0-9])/', '-$1', $rec['slug']);
+        $canonical = self::BASE_URL . "/jobs/{$cleanSlug}";
 
         // Calculate critical dates
         $startDate = null;
@@ -254,11 +328,12 @@ class SeoEngine {
         $dateRangeText = $lastDate ? "Apply by {$lastDate}" : "Online Applications Open";
 
         // Dynamic High-CTR Title (UPSC CSE 2026: 1,056 Posts, Eligibility, Syllabus & Apply Online)
-        $title = "{$org} {$jobTitle} Recruitment {$year}: {$vacancies} Posts, Eligibility, Salary & Apply Online";
-        $desc = "Official notification for {$org} {$jobTitle} (Advt: {$advt}). Total {$vacancies} vacancies. Qualification: {$qual}. {$dateRangeText}. Download PDF & apply.";
+        $vacText = ($vacancies !== 'Various') ? " ({$vacancies} Posts)" : "";
+        $title = "{$shortOrg} {$cleanTitle} {$year}{$vacText}: Apply Online, Eligibility";
+        $desc = "{$shortOrg} {$cleanTitle} Recruitment {$year} ({$vacancies} Vacancies). Check eligibility (योग्यता), age limit, exam dates & direct apply online link. Download notification PDF.";
 
         // AEO 40-Word TL;DR Direct-Answer Text (Prime candidate for Google AI Overviews)
-        $tldrText = "The {$org} has officially announced {$vacancies} vacancies for {$jobTitle} under advertisement {$advt}. Online applications are accepted until " . ($lastDate ?: 'the notified closing date') . ". Eligible candidates holding a {$qual} can apply online via the official portal at {$applyUrl}. Selection includes written examination and document verification.";
+        $tldrText = "The {$org} ({$shortOrg}) has officially announced {$vacancies} vacancies for {$cleanTitle} under advertisement {$advt}. Online applications are accepted until " . ($lastDate ?: 'the notified closing date') . ". Eligible candidates holding a {$qual} can apply online via the official portal at {$applyUrl}. Selection includes written examination and document verification.";
 
         // Schemas: JobPosting + FAQPage + BreadcrumbList
         $datePosted = !empty($rec['created_at']) ? date('Y-m-d', strtotime($rec['created_at'])) : date('Y-m-d');
@@ -397,8 +472,8 @@ class SeoEngine {
         $slug = $exam['slug'];
         $canonical = self::BASE_URL . "/exams/{$slug}";
 
-        $title = "{$name} ({$short}) 2026: Pattern, Syllabus, Cutoff Marks & Preparation";
-        $desc = "Complete intelligence hub for {$name} ({$short}) conducted by {$body}. Detailed Tier/Phase exam scheme, subject syllabus weightage, previous year cutoff marks & strategy.";
+        $title = "{$short} 2026 Exam: Syllabus, Pattern & Cutoffs";
+        $desc = "Official intelligence hub for {$short} ({$name}) by {$body}. Check latest exam scheme, subject-wise syllabus in Hindi/English, previous cutoffs & dates.";
 
         $tldrText = "{$name} ({$short}) is a premier national examination conducted by {$body}. The recruitment process comprises multiple assessment stages with negative marking. Comprehensive syllabus topics, qualifying thresholds, and previous year cutoff marks are compiled below for serious aspirants.";
 
@@ -496,8 +571,8 @@ class SeoEngine {
         $activeCount = count($jobs);
         $canonical = self::BASE_URL . "/commissions/{$slug}";
 
-        $title = "{$name} ({$short}) Recruitment 2026: Official Notices, Exam Calendar & Jobs";
-        $desc = "Official recruitment dossier for {$name}. Track {$activeCount} active job notifications, examination calendar, admit cards, syllabus and direct official portal links.";
+        $title = "{$short} Recruitment 2026: Latest Notifications & Exam Calendar";
+        $desc = "Official recruitment dossier for {$short} ({$name}). Track {$activeCount} active job notifications, exam calendar, syllabus & direct official application links.";
 
         $tldrText = "Official recruitment directory for {$name} ({$short}). Currently tracking {$activeCount} active government job vacancies, online registration deadlines, OTR portals, and gazette notifications. All links verified against official government servers.";
 

@@ -5,9 +5,37 @@ use App\Database;
 $slug = $_GET['slug'] ?? '';
 $db = Database::getConnection();
 
+// 301 Normalize: If URL contains duplicated year (e.g. -2026-2026), redirect to clean URL
+$cleanSlug = preg_replace('/-(202[0-9])-(202[0-9])/', '-$1', $slug);
+if ($cleanSlug !== $slug && !empty($cleanSlug)) {
+    header("Location: /articles/" . $cleanSlug, true, 301);
+    exit;
+}
+
+// 1. Try exact slug match
 $stmt = $db->prepare("SELECT * FROM articles WHERE slug = ? AND status = 'Published' LIMIT 1");
 $stmt->execute([$slug]);
 $article = $stmt->fetch();
+
+// 2. If not found, try matching with double year
+if (!$article) {
+    $altSlug = preg_replace('/-(202[0-9])-([a-z0-9\-]+)$/', '-$1-$1-$2', $slug);
+    $stmt = $db->prepare("SELECT * FROM articles WHERE slug = ? AND status = 'Published' LIMIT 1");
+    $stmt->execute([$altSlug]);
+    $article = $stmt->fetch();
+}
+
+// 3. Fallback match by keywords
+if (!$article) {
+    $cleanKeywords = str_replace(['-', '_'], ' ', $slug);
+    $words = array_filter(explode(' ', $cleanKeywords), fn($w) => strlen($w) > 3 && !is_numeric($w));
+    if (!empty($words)) {
+        $searchTerms = '%' . implode('%', array_slice($words, 0, 3)) . '%';
+        $stmt = $db->prepare("SELECT * FROM articles WHERE (title LIKE ? OR slug LIKE ?) AND status = 'Published' LIMIT 1");
+        $stmt->execute([$searchTerms, $searchTerms]);
+        $article = $stmt->fetch();
+    }
+}
 
 if (!$article) {
     http_response_code(404);
